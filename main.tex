@@ -1,0 +1,350 @@
+% \documentclass[12pt,a4paper,oneside]{book}
+% \usepackage[utf8]{vietnam}
+% \usepackage{graphicx}
+% \graphicspath{{images/}}
+% \usepackage{appendix}
+% \usepackage{listings}
+% \usepackage{xcolor}
+% \usepackage[linesnumbered,lined,ruled]{algorithm2e}
+
+% \usepackage{etoolbox}
+
+% \usepackage[unicode]{hyperref}
+
+% \usepackage{setting/bkthesis}
+
+% \usepackage[vietnamese]{babel}
+% \usepackage{titlesec}
+% \usepackage{titletoc}
+% \usepackage{listings}
+
+
+% %code hight light
+% \lstset{frame=tb,
+%   language=Java,
+%   aboveskip=3mm,
+%   belowskip=3mm,
+%   showstringspaces=false,
+%   columns=flexible,
+%   basicstyle={\small\ttfamily},
+%   numbers=left,
+%   numberstyle=\tiny\color{gray},
+%   keywordstyle=\color{blue},
+%   commentstyle=\color{dkgreen},
+%   stringstyle=\color{mauve},
+%   breaklines=true,
+%   breakatwhitespace=true,
+%   tabsize=3,
+%   float=H
+% }
+
+% \usepackage[left=3cm,right=2cm,top=2.5cm,bottom=3cm]{geometry}
+% \usepackage{fancyhdr}
+% \pagestyle{fancy}
+% \fancyhead{}
+% \fancyhead[RO,LE]{Thesis Title}
+% \fancyfoot{}
+% \fancyfoot[LE,RO]{\thepage}
+% \fancyfoot[LO,CE]{Chapter \thechapter}
+% \fancyfoot[CO,RE]{Author Name}
+
+\documentclass[13pt,a4paper,oneside]{book} % twoside for draf
+
+\usepackage[justification=centering]{caption}
+%\usepackage{babel}
+\usepackage[utf8]{vietnam}
+%\usepackage{times}
+%\usepackage{graphicx}
+
+\usepackage{mathptmx}	% same Time New Roma
+
+\usepackage{indentfirst}
+
+%\renewcommand{\rmdefault}{phv} % Arial
+%\renewcommand{\sfdefault}{phv} % Arial
+% \usepackage[fontsize=13pt]{scrextend}
+\usepackage[multiple]{footmisc}
+\usepackage{fancyhdr}
+% \usepackage[utf8]{inputenc}
+\usepackage[vietnamese, english]{babel}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{listings}
+\usepackage[bookmarks=true]{hyperref}
+\usepackage[left=3cm,right=2cm,top=2.5cm,bottom=3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{varwidth}
+\usepackage{float}
+\usepackage{color}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage[linesnumbered,lined,ruled,resetcount, algochapter]{algorithm2e}
+\usepackage{svg}
+\usepackage{tabularx}
+\usepackage{nomencl}
+\usepackage{scrfontsizes}
+\usepackage{longtable}
+\usepackage{multicol}
+\usepackage[toc,page]{appendix}
+\usepackage{adjustbox}
+
+\usepackage{makecell}
+\usepackage{longtable}
+\usepackage{multirow}
+% \usepackage{algpseudocode}
+\usepackage{setting/bkthesis}
+\usepackage[toc]{appendix}
+\usepackage{subcaption}
+\usepackage{csquotes}
+
+%\counterwithin{figure}{chapter}
+\usepackage[
+defernumbers,
+sortcites,
+backend=biber,
+bibstyle=authoryear,
+sorting=ynt,
+citestyle=numeric-comp
+]{biblatex}
+\usepackage{xpatch}
+
+\makeatletter
+\input{numeric.bbx}
+\makeatother
+
+\xpatchbibmacro{date+extrayear}{%
+  \printtext[parens]%
+}{%
+  \setunit{\addperiod\space}%
+  \printtext%
+}{}{}
+
+% \usepackage{biblatex}
+\addbibresource{refs.bib}
+
+% \renewcommand\labelitemi{--}
+
+\setlength{\parskip}{6pt}
+
+\usetikzlibrary{calc}
+\setlength{\parindent}{10mm}
+\renewcommand{\baselinestretch}{1.3}
+\graphicspath{{images/}}
+\renewcommand{\listalgorithmcfname}{Danh sách thuật toán}
+\renewcommand{\nomname}{Danh sách ký hiệu, viết tắt}
+\renewcommand\appendixtocname{Phụ lục}
+
+\SetKwRepeat{Do}{do}{while}%
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{arrows.meta,arrows}
+
+% \algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}%
+% \usepackage{setting/uetthesis}
+
+%%% The following lines add Chapter or Appendix in front of the number
+\titlecontents{chapter}%
+[0pt]%
+{\vspace{1ex}}%
+{\bfseries Chương \thecontentslabel\quad}%
+{\bfseries}%
+{\bfseries\hfill\contentspage}
+%%% Initially, for the main part of the document, set the label to "Chapter"
+\let\chapappname\chaptername
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+% \thesislayout
+% hyper setup
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+% setup code area as listings
+\lstset{frame=tb,
+  language=Java,
+  xleftmargin=10pt,xrightmargin=10pt,
+%   framesep=2cm,
+%   aboveskip=2cm,
+%   belowskip=2cm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2
+}
+
+\renewcommand{\bibname}{Whatever floats your boat}
+
+\newcommand{\tcode}[1]{{\ttfamily\selectfont#1}}
+
+\hypersetup{
+	bookmarks=true,
+	pdftitle={ON IMPROVEMENTS OF AUTOMATED TEST DATA GENERATION METHOD FOR C/C++ PROJECTS BASED ON SOURCE CODE ANALYSIS},
+	pdfauthor={Nguyễn Tùng Lâ}, % author
+	pdfsubject={TeX and LaTeX},
+	pdfkeywords={TeX, LaTeX, graphics, images}, % list of keywords
+	colorlinks=false,       % false: boxed links; true: colored links
+	linkcolor=black,       % color of internal links
+	citecolor=black,       % color of links to bibliography
+	filecolor=black,        % color of file links
+	urlcolor=black,        % color of external links
+	linktoc=page           % only page is linked
+}
+
+\colorlet{punct}{red!60!black}
+\definecolor{delim}{RGB}{20,105,176}
+\colorlet{numb}{magenta!60!black}
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    literate=
+     *{0}{{{\color{numb}0}}}{1}
+      {1}{{{\color{numb}1}}}{1}
+      {2}{{{\color{numb}2}}}{1}
+      {3}{{{\color{numb}3}}}{1}
+      {4}{{{\color{numb}4}}}{1}
+      {5}{{{\color{numb}5}}}{1}
+      {6}{{{\color{numb}6}}}{1}
+      {7}{{{\color{numb}7}}}{1}
+      {8}{{{\color{numb}8}}}{1}
+      {9}{{{\color{numb}9}}}{1}
+      {:}{{{\color{punct}{:}}}}{1}
+      {,}{{{\color{punct}{,}}}}{1}
+      {\{}{{{\color{delim}{\{}}}}{1}
+      {\}}{{{\color{delim}{\}}}}}{1}
+      {[}{{{\color{delim}{[}}}}{1}
+      {]}{{{\color{delim}{]}}}}{1},
+}
+
+
+\lstdefinelanguage{JavaScript}{
+  morekeywords=[1]{break, continue, delete, else, for, function, if, in,
+    new, return, this, typeof, var, void, while, with},
+  % Literals, primitive types, and reference types.
+  morekeywords=[2]{false, null, true, boolean, number, undefined,
+    Array, Boolean, Date, Math, Number, String, Object},
+  % Built-ins.
+  morekeywords=[3]{eval, parseInt, parseFloat, escape, unescape},
+  sensitive,
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]//,
+  morecomment=[s]{/**}{*/}, % JavaDoc style comments
+  morestring=[b]',
+  morestring=[b]"
+}[keywords, comments, strings]
+
+\lstalias[]{ES6}[ECMAScript2015]{JavaScript}
+
+\lstdefinelanguage[ECMAScript2015]{JavaScript}[]{JavaScript}{
+  morekeywords=[1]{await, async, case, catch, class, const, default, do,
+    enum, export, extends, finally, from, implements, import, instanceof,
+    let, static, super, switch, throw, try},
+  morestring=[b]` % Interpolation strings.
+}
+
+\renewcommand*{\algorithmcfname}{Thuật toán}
+\renewcommand\lstlistlistingname{Danh sách đoạn mã}
+\renewcommand{\lstlistingname}{Đoạn mã}
+% \renewcommand\thechapter{\arabic{chapter}}
+% \renewcommand\thesection{\thechapter.\arabic{section}}
+% \renewcommand\thesubsection{\thesection.\arabic{subsection}}
+% \renewcommand\thesubsubsection{\thesubsection.\arabic{subsubsection}}
+\renewcommand{\thetable}{\thechapter.\arabic{table}}
+\renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+\renewcommand{\thealgocf}{\thechapter.\arabic{algocf}}
+
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{F}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\begin{document}
+\renewcommand{\thelstlisting}{\thechapter.\arabic{lstlisting}}
+
+\pagestyle{plain}
+\frontmatter
+
+\input{chapters/0-coverpage}
+
+\changefontsizes[16pt]{13pt}
+% \input{chapters/0.2.start}
+
+\renewcommand{\contentsname}{Mục lục}
+\tableofcontents
+
+% \pagestyle{fancy}
+
+\renewcommand{\listfigurename}{Danh sách hình vẽ}
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+
+\renewcommand{\listtablename}{Danh sách bảng}
+\listoftables
+\addcontentsline{toc}{chapter}{\listtablename}
+
+\listofalgorithms
+\addcontentsline{toc}{chapter}{\listalgorithmcfname}
+
+\lstlistoflistings
+\addcontentsline{toc}{chapter}{\lstlistlistingname}
+
+\renewcommand{\chaptername}{Chương}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+
+% \newpage
+\chapter*{Thuật ngữ}
+\addcontentsline{toc}{chapter}{Thuật ngữ}
+\changefontsizes[16pt]{13pt}
+\begin{table}[h!]
+    \centering
+    %\begin{adjustbox}{width=1\textwidth}
+    \begin{tabularx}{\textwidth}{@{} |p{3cm}|L|L| @{}}
+        \hline
+        \multicolumn{2}{|c|}{\centering\textbf{Thuật ngữ}} & \multirow{2}{*}{\hspace{2.12cm}\textbf{Ý nghĩa}} \\ \cline{1-2}
+        \centering\textbf{Từ viết tắt} & \centering\textbf{Từ đầy đủ} & \\ \hline
+        AST & Abstract Syntax Tree & Cây cú pháp trừu tượng\\ \hline
+        CFG & Control Flow Graph & Đồ thị dòng điều khiển\\ \hline
+        CFT & Control Flow Testing & Kiểm thử dòng điều khiển\\ \hline
+        SE & Symbolic Execution & Thực thi giá trị tượng trưng\\ \hline
+        SMT & Satisfiability Modulo Theories & Lý thuyết mô-đun thỏa mãn\\ \hline
+        \multicolumn{2}{|l|}{Static testing} & Kiểm thử tĩnh \\ \hline
+        \multicolumn{2}{|l|}{Dynamic testing} & Kiểm thử động \\ \hline
+        \multicolumn{2}{|l|}{Concolic testing} & Kiểm thử tượng trưng động \\ \hline
+        \end{tabularx}
+    %\end{adjustbox}
+    \label{table:1}
+\end{table}
+
+\mainmatter
+
+
+
+\changefontsizes[16pt]{13pt}
+\pagestyle{plain}
+\include{chapters/1-introduction}
+\include{chapters/2-base-knowledge}
+\include{chapters/3-proposed-solution}
+\include{chapters/4-implementation-and-experiment}
+\include{chapters/5-conclusion}
+
+\chapter{Tài liệu tham khảo}
+\printbibliography[keyword={vietnam}, heading=subbibliography, title={Tiếng Việt}, resetnumbers=true]
+\printbibliography[notkeyword={vietnam}, heading=subbibliography, title=Tiếng Anh]
+\end{document}

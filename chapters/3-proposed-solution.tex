@@ -1,0 +1,494 @@
+\chapter{Phương pháp kiểm thử đơn vị tự động cho mã nguồn chứa hàm thiếu định nghĩa}
+\section{Tổng quan phương pháp đề xuất}\label{sec:tongquan}
+Về tổng quan, phương pháp đề xuất là sự kết hợp giữa phương pháp kiểm thử tượng trưng động~\cite{ConcolicTesting} và phương pháp sinh giả lập mã nguồn tự động~\cite{TUNG2022106821} với các cải tiến trong quá trình xử lý môi trường kiểm thử chứa hàm thiếu định nghĩa và quá trình thực thi tượng trưng lời gọi phương thức. Quá trình kiểm thử tự động bao gồm bốn pha được mô tả trong Hình~\ref{fig:proposed-flow}. Các pha được in đậm trong hình vẽ thể hiện chúng được bổ sung hoặc cải tiến bởi phương pháp đề xuất.
+
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\linewidth]{images/proposed-flow}
+    \caption{Tổng quan phương pháp đề xuất.}
+    \label{fig:proposed-flow}
+\end{figure}
+
+Pha đầu tiên trong phương pháp đề xuất là pha xây dựng môi trường kiểm thử. Hai nhiệm vụ chính của pha đó là thực hiện các tác vụ tiền xử lý trên mã nguồn kiểm thử và phân tích mã nguồn để xây dựng đồ thị cấu trúc mã nguồn kiểm thử. Nội dung chi tiết của pha xây dựng môi trường kiểm thử được trình bày trong Mục~\ref{sec:3-build-env}.
+
+Pha tiếp theo trong phương pháp đề xuất là pha xử lý hàm thiếu nghĩa. Pha này được bổ sung so với phương pháp kiểm thử tự động truyền thống nhằm xử lý các vấn đề phát sinh bởi các hàm thiếu định nghĩa khi kiểm thử tự động cho các mã nguồn chưa hoàn chỉnh. Chi tiết về quá trình xử lý hàm thiếu định nghĩa được mô tả trong Mục~\ref{sec:handle-undef}.
+
+Sau pha xử lý hàm thiếu định nghĩa, quá trình kiểm thử tự động chuyển sang pha sinh dữ liệu kiểm thử tự động cho các đơn vị kiểm thử. Khóa luận sử dụng phương pháp sinh kế thừa từ phương pháp sinh dữ liệu kiểm thử tượng trưng động và phương pháp sinh giả lập mã nguồn AS4UT (mô tả ở Mục~\ref{sec:autostub-Lam}). Trong pha sinh dữ liệu kiểm thử tự động, phương pháp đề xuất bổ sung bước sinh giả lập mã nguồn cho các hàm là phương thức của đối tượng nhằm tăng khả năng thực thi các câu lệnh, điều kiện có liên quan đến các đối tượng được sử dụng trong đơn vị kiểm thử. Nội dung chi tiết của pha sinh dữ liệu kiểm thử được trình bày ở Mục~\ref{sec:autogen}. 
+
+Cuối cùng, các dữ liệu độ phủ được thu thập ở pha sinh dữ liệu kiểm thử được phân tích và tạo thành báo cáo kiểm thử trong pha sinh báo cáo độ phủ mã nguồn. Khóa luận sử dụng công cụ tính độ phủ GCOV và công cụ sinh báo cáo LCOV để thực hiện nhiệm vụ của pha. Trong đó, GCOV là công cụ phân tích độ phủ tích hợp sẵn trong gói của trình biên dịch C/C++ GNU, LCOV là một tiện ích mở rộng từ công cụ GCOV với nhiệm vụ sinh báo cáo độ phủ dạng HTML dựa trên các thông tin độ phủ của GCOV. GCOV và LCOV là hai công cụ có sẵn trong trình biên dịch và được sử dụng phổ biến trong các dự án~C/C++ \cite{hu2021software}. Quá trình thực thi ca kiểm thử ở pha trước sinh ra thông tin về số lần chạy qua một dòng, số lần chạy qua các nhánh điều kiện với từng trường hợp đúng, sai theo định dạng của GCOV. Thông tin này sau đó được LCOV tổng hợp, tính toán và đưa ra tệp báo cáo HTML.
+
+\section{Pha xây dựng môi trường kiểm thử} \label{sec:3-build-env}
+Như đã đề cập ở Mục \ref{sec:tongquan}, pha xây dựng môi trường kiểm thử thực hiện hai nhiệm vụ chính. Nhiệm vụ thứ nhất đó là thực hiện hai tác vụ tiền xử lý mã nguồn. Tác vụ đầu tiên là tác vụ thiết lập môi trường nhằm biên dịch mã nguồn và các ca kiểm thử về sau. Tác vụ này cài đặt các lệnh biên dịch, xác định và liên kết các thư viện mà mã nguồn sử dụng, thiết lập kiểu độ phủ mong muốn cho các đơn vị kiểm thử. Tác vụ thứ hai là tác vụ tạo môi trường tính toán độ phủ. Tác vụ này nhân bản mã nguồn kiểm thử và bổ sung các câu lệnh đánh dấu (instrumentation) nhằm phục vụ quá trình xác định các câu lệnh, nhánh được viếng thăm và tính toán độ phủ trong pha sinh dữ liệu kiểm thử tự động. Nhiệm vụ còn lại của pha đó là phân tích mã nguồn kiểm thử và xây dựng đồ thị cấu trúc mã nguồn. Bước phân tích mã nguồn sử dụng công cụ phân tích mã nguồn CDT Parser để trích xuất AST của mã nguồn kiểm thử. Từ thông tin trên AST, phương pháp đề xuất xây dựng đồ thị cấu trúc mã nguồn với các thông tin được phân tích đến mức hàm.
+
+\subsection*{Đồ thị cấu trúc mã nguồn}
+Đồ thị cấu trúc mã nguồn là một cấu trúc dữ liệu biểu diễn mối quan hệ và sự tương tác giữa các thành phần trong mã nguồn kiểm thử. Đồ thị này được biểu diễn bởi một đồ thị có hướng $G = (V, E)$, trong đó $V$ là tập các đỉnh tượng trưng cho các thành phần trong các đơn vị kiểm thử và $E$ là tập các cạnh có hướng nối giữa hai đỉnh tượng trưng cho mối quan hệ phát sinh giữa đỉnh đầu và đỉnh cuối. Mỗi đỉnh trong đồ thị biểu thị cho các đơn vị cơ bản như như tệp mã nguồn, lớp, biến, thư viện được sử dụng, các hàm, v.v. Để làm rõ thể hiện của các hàm thiếu định nghĩa trong đồ thị, khóa luận biểu thị hàm thành hai loại đỉnh hàm: đỉnh nguyên mẫu hàm và đỉnh định nghĩa hàm. Mỗi cạnh trong mã nguồn thuộc một trong các cạnh được mô tả dưới đây.
+\begin{itemize}
+    \item Cạnh cha con: Thể hiện mối quan hệ cha - con (hay mối quan hệ chứa) giữa hai đơn vị cơ bản trong đơn vị kiểm thử. Ví dụ cho mối quan hệ này có thể kể đến như lớp chứa một số thuộc tính và phương thức, tương đương quan hệ lớp là cha của các thuộc tính và phương thức.
+    \item Cạnh Include: Thể hiện mối quan hệ Include giữa hai tệp mã nguồn. Ví dụ cho quan hệ này là dòng lệnh \tcode{\#include} thường thấy trong các mã nguồn C/C++.
+    \item Cạnh kế thừa: Thể hiện mối quan hệ kế thừa giữa lớp cha và lớp dẫn xuất. Hai đỉnh của cạnh là hai đỉnh lớp.
+    \item Cạnh lời gọi hàm: Thể hiện tương tác giữa hai hàm trong mã nguồn kiểm thử. Hai đỉnh của cạnh là hai đỉnh hàm. Cạnh lời gọi hàm là thành phần quan trọng trong bước xác định các hàm cần tạo stub khi kiểm thử tự động cho một hầm bất kì.
+    \item Cạnh định nghĩa: Thể hiện mối quan hệ định nghĩa giữa đỉnh nguyên mẫu hàm ảo và đỉnh định nghĩa hàm ảo. Quan hệ định nghĩa thể hiện nguyên mẫu hàm được trỏ tới tồn tại một khai báo định nghĩa.
+\end{itemize}
+
+Đồ thị cấu trúc mã nguồn được xây dựng bằng việc mở rộng từng đỉnh tệp với các cạnh cha con. Quá trình mở rộng đỉnh tệp cấu thành một cây cấu trúc tệp. Tiếp theo, dựa trên các cây cấu trúc tệp, đồ thị cấu trúc mã nguồn được hoàn thiện bằng cách phân tích AST kết hợp tìm kiếm để bổ sung các cạnh quan hệ còn lại. Cạnh định nghĩa là trường hợp đặc biệt được bổ sung sau vào đồ thị trong pha xử lý hàm thiếu định nghĩa.
+
+\subsection*{Ví dụ về đồ thị cấu trúc mã nguồn}
+\begin{figure}[ht]
+    \begin{minipage}[t]{0.5\linewidth}
+    \begin{lstlisting}[language=C++, caption={Mã nguồn tệp \textit{a.cpp} minh họa đồ thị cấu trúc mã nguồn.}, label={cod:dep-cpp}, captionpos=b]
+// a.cpp
+#include "a.hpp"
+int A::func() {
+    /* Function logic */
+}
+double foo() {
+    /* Some logic */
+    int ret = stub();
+    / * Some logic */
+}
+int stub() {
+    /* Function logic */
+}
+    \end{lstlisting}
+    \end{minipage}
+    \begin{minipage}[t]{0.5\linewidth}
+    \begin{lstlisting}[language=C++, caption={Mã nguồn tệp \textit{a.hpp} minh họa đồ thị cấu trúc mã nguồn.}, label={cod:dep-hpp}, captionpos=b]
+// a.hpp
+class IA {
+public: 
+    int bar();
+};
+class A : public IA {
+public:
+    A() {}
+    int x;
+    virtual int beta();
+    virtual int func();
+    double foo();
+}; 
+    \end{lstlisting}
+\end{minipage}
+\end{figure}
+
+Hình \ref{fig:dep-graph} minh hoạ đồ thị cấu trúc mã nguồn của hai tệp mã nguồn a.hpp và a.cpp trong Đoạn mã \ref{cod:dep-cpp} và \ref{cod:dep-hpp}. Trong đó, các cạnh nét liền mũi tên đen thể hiện cạnh cha con giữa hai đỉnh và các kiểu cạnh còn lại được ký hiệu trên hình vẽ với thể hiện tương ứng. Cây cấu trúc mã nguồn của tệp \textit{a.cpp} gồm ba đỉnh hàm. Cây cấu trúc mã nguồn của tệp \textit{a.hpp} gồm hai đỉnh lớp, mỗi đỉnh lớp có quan hệ cha con với một số đỉnh như đỉnh thuộc tính, đỉnh nguyễn mẫu hàm. Cạnh Include từ đỉnh tệp \textit{a.cpp} tới đỉnh \textit{a.hpp} tương đương dòng lệnh \tcode{\#include "a.hpp"} trong Đoạn mã \ref{cod:dep-cpp}. Cạnh lời gọi hàm từ đỉnh định nghĩa hàm \tcode{double A::foo()} tới đỉnh định nghĩa hàm \tcode{int stub()} tương đương lời gọi hàm ở dòng 8 trong tệp \textit{a.cpp}. Đoạn mã ví dụ cho thấy nguyên mẫu hàm ảo \tcode{int func()} trong lớp A có tồn tại định nghĩa bởi hàm \tcode{int A::func()} nhưng đồ thị thiếu cạnh định nghĩa về quan hệ này do cạnh định nghĩa giữa hai đỉnh sẽ được bổ sung sau pha xử lý hàm thiếu định nghĩa.  
+ 
+\begin{figure}[t]
+    \centering
+    \includesvg[width=\linewidth]{images/dep-graph}
+    \caption{Ví dụ minh hoạ về đồ thị cấu trúc mã nguồn xây dựng trên mã nguồn tệp \textit{a.hpp} và \textit{a.cpp}.}
+    \label{fig:dep-graph}
+\end{figure}
+
+\section{Pha xử lý hàm thiếu định nghĩa} \label{sec:handle-undef}
+Pha xử lý hàm thiếu định nghĩa được bổ sung với hai nhiệm vụ chính đó là xử lý các nguyên mẫu hàm thiếu định nghĩa tìm được bởi trình biên dịch và xử lý các nguyên mẫu hàm ảo thiếu định nghĩa mà trình biên dịch không thể phát hiện được. Ý tưởng chung để giải quyết hai nhiệm vụ vừa đề cập dựa trên việc tìm kiếm các ứng viên nguyên mẫu hàm tương thích trong mã nguồn kiểm thử theo các tiêu chí thích hợp, sau đó sinh thân hàm giả cho các ứng viên này. Mục \ref{sec:handle-undef-first} mô tả cụ thể về phương pháp xử lý nhiệm vụ thứ nhất. Phương pháp xử lý nguyên mẫu hàm ảo được trình bày trong Mục \ref{sec:handle-undef-second}.
+
+\subsection{ Phương pháp xử lý nguyên mẫu hàm thiếu định nghĩa tìm bởi trình biên dịch} \label{sec:handle-undef-first}
+Khóa luận đề xuất phương pháp sử dụng trình biên dịch để tìm kiếm các nguyên mẫu hàm cần sinh thân hàm giả trong mã nguồn kiểm thử. Thuật toán \ref{alg:handle-ref} mô tả chi tiết quá trình tìm kiếm và xử lý các nguyên mẫu hàm thiếu định nghĩa. Trước hết, thuật toán bắt đầu bằng việc thu thập danh sách các nguyên mẫu hàm cần quan tâm trong tập các tệp mã nguồn $S$ và khởi tạo tập $T$ rỗng. Danh sách trả về bao gồm các xâu ký tự, mỗi xâu biểu thị một hàm bao gồm tên hàm và danh sách tham số của hàm đó (dòng~1-2). Tập $T$ là tập hợp các nguyên mẫu hàm trong mã nguồn kiểm thử được sinh thân hàm giả. Sau khi có danh sách, thuật toán xử lý từng xâu trong danh sách đầu vào (dòng~3-14). Cụ thể, với mỗi xâu, một AST $undef\_ast$ được xây dựng từ chữ ký hàm mà xâu biểu thị (dòng~4). Tiếp đó, tên của nguyên mẫu hàm được trích xuất từ AST vừa xây dựng (dòng~5) và tập các nguyên mẫu hàm ứng viên có cùng tên trong mã nguồn kiểm thử được thu thập và lưu vào danh sách $candidates$ (dòng~6). Danh sách tham số của nguyên mẫu hàm $undef$ và phạm vi định danh (scope qualifier) được trích xuất từ AST phục vụ cho quá trình lọc (dòng~7-8). Danh sách ứng viên được lọc bởi Thuật toán \ref{alg:filter-undef} và thu được các ứng viên hợp lệ $qualified\_cans$ (dòng~9). Cuối cùng, từng ứng viên hợp lệ $qc$ được sinh thân hàm giả và thêm vào tập $T$ (dòng~11-12). Dữ liệu trong tập $T$ được lưu lại để xây dựng môi trường kiểm thử cho mã nguồn đang xét trong các lần sau mà không cần xử lý lại từ đầu.
+
+\begin{algorithm}[ht]
+    \small
+    \caption{Thuật toán xử lý hàm thiếu định nghĩa}
+    \label{alg:handle-ref}
+    \SetKwComment{Comment}{/* }{ */} 
+    \KwIn{~$S$ - collection of source code files}
+    \KwOut{~$T$ - collection of handled undefined functions}
+					
+    $undefined\_functions \leftarrow $ Get necessary undefined functions in $S$\;
+    $T \leftarrow \emptyset$\;
+    \For {$undef : undefined\_functions$} {
+        $undef\_ast\leftarrow$ Construct AST from the string $undef$\;
+        $undef\_name \leftarrow$ Get the name of the function from string $undef\_ast$\;
+        $candidates \leftarrow$ Find all function prototypes having the same name with $undef\_name$ in source code\;
+        $undef\_params \leftarrow$ Extract a list of parameters from $undef\_ast$\;
+        $undef\_scope\leftarrow$ Extract function scope qualifier from $undef\_ast$\;
+        $qualified\_cans\leftarrow$ \textbf{call} Algorithm \ref{alg:filter-undef} $(undef\_params, undef\_scope, candidates)$\;
+        \For {$qc : qualified\_cans$} {
+            $t \leftarrow $ Generate simple function body for $qc$\;
+            $T \leftarrow T \cup {t}$
+        }
+    }
+
+    \Return $T$
+\end{algorithm}
+
+\subsubsection*{Thu thập danh sách nguyên mẫu hàm thiếu định nghĩa}\label{sec:find-undef}
+Ý tưởng sử dụng các công cụ tiện ích của trình biên dịch để tìm nguyên mẫu hàm cần quan tâm xuất phát từ lợi thế trình biên dịch biết hàm nào sẽ được sử dụng trong các tệp đối tượng như đã trình bày ở Mục \ref{sec:kno-undefine}. Đoạn mã \ref{cod:command-undef} mô tả cách dùng các công cụ tiện ích có trong trình biên dịch để tìm các nguyên mẫu hàm thiếu định nghĩa. Đầu tiên, phương pháp đề xuất sử dụng công cụ \textit{g++} với cờ \textit{-c} để biên dịch các tệp mã nguồn thành tệp đối tượng (object file) có đuôi \textit{.o} (dòng 1). Sau đó, các tệp đối tượng này sẽ được liên kết bởi công cụ liên kết \textit{ld} và cờ \textit{-r} thành một tệp đối tượng tổng hợp \textit{temp.o} (dòng 2). Lí do phương pháp đề xuất sử dụng công cụ liên kết \textit{ld} thay vì \textit{g++} là bởi \textit{g++} yêu cầu người dùng phải hoàn thiện tất cả các nguyên mẫu hàm bị thiếu định nghĩa trước khi liên kết thành tệp tổng hợp. Cuối cùng, tệp đối tượng tổng hợp được phân tích bởi công cụ phân tích ký hiệu \textit{nm}\footnote{https://sourceware.org/binutils/docs/binutils/nm.html} với các cờ \textit{-u} - trích xuất các hàm thiếu định nghĩa, \textit{-C} - chuyển ký hiệu máy thành ngôn ngữ lập trình C++ (dòng 3). Đầu ra của công cụ \textit{nm} sẽ được ghi vào tệp \textit{list.txt}.\\
+
+\begin{lstlisting}[language=C++, caption={Các câu lệnh tìm nguyên mẫu hàm thiếu định nghĩa cần quan tâm sử dụng trình biên dịch.}, label={cod:command-undef},  captionpos=b]
+g++ -c *.cpp
+ld -r *.o -o temp.o
+nm temp.o -u -C > list.txt
+\end{lstlisting}
+
+\begin{figure}[t]
+    \begin{minipage}[t]{0.5\linewidth}
+    \begin{lstlisting}[language=C++, caption={Mã nguồn tệp a.cpp.}, label={cod:undef-cpp}, captionpos=b]
+// a.cpp
+#include "a.hpp"
+#include "b.hpp"
+    
+int foo(A *a, int x) {
+    int ret = a->bar(true);
+    int max = maxT<int>(x, ret);
+    max += a->echo();
+    const int *p = &(a->x);
+    ret -= func(p, max);
+    return ret;
+}
+
+void gamma(A *a, int x) {
+    double max = maxT<double>(x, a->x);
+    a->x = max;
+}
+int unused(int x);
+    \end{lstlisting}
+    \end{minipage}
+    \begin{minipage}[t]{0.5\linewidth}
+    \begin{lstlisting}[language=C++, caption={Mã nguồn tệp a.hpp, b.hpp và c.hpp.}, label={cod:undef-hpp}, captionpos=b]
+// a.hpp
+#include "c.hpp"
+class A {
+public: 
+    int x;
+    A(int _x) { x = _x; }
+    int bar(bool b);
+    double echo() {
+        return x + delta(&x);
+    }
+};
+int bar(bool b);
+// b.hpp
+template <typename T> T max(T a);
+int func(int *a, int b);
+int func(const int* a, int b);
+    
+// c.hpp
+double delta(int* const x);  
+    \end{lstlisting}
+\end{minipage}
+\end{figure}
+
+Đoạn mã \ref{cod:undef-cpp} và \ref{cod:undef-hpp} minh họa cách áp dụng phương pháp đề xuất trên tập đơn vị kiểm thử cần xử lý các nguyên mẫu hàm thiếu định nghĩa với bốn tệp mã nguồn. Kiểm thử viên muốn kiểm thử tự động cho hai hàm có lôgic đầy đủ \tcode{foo} và \tcode{gamma}. Hai hàm này chứa mã nguồn đầy đủ. Hai đoạn mã chứa một số nguyên mẫu hàm đó là \tcode{unused}, \tcode{bar}, \tcode{delta} và ba hàm trong tệp \tcode{b.hpp}.Hàm \tcode{foo} trong Đoạn mã \ref{cod:undef-cpp} nhận đầu vào là một biến con trỏ đến đối tượng của lớp \tcode{A} và một biến kiểu nguyên \tcode{x}. Lôgic mã nguồn của \tcode{foo} gọi tới hai phương thức của biến \tcode{a} đó là \tcode{bar} và \tcode{echo}. Ngoài ra, hàm \tcode{foo} còn gọi tới nguyên mẫu hàm template \tcode{maxT} với kiểu khởi tạo \tcode{int} và hàm \tcode{func(const int* a, int b)} thuộc tệp \tcode{b.hpp}. Hàm \tcode{gamma} cũng có các đầu vào tương tự nhưng gọi nguyên mẫu hàm \tcode{maxT} nhưng sử dụng tham số kiểu \tcode{double} thay vì \tcode{int} như hàm \tcode{foo}.
+
+Đoạn mã \ref{cod:result-undef} minh họa danh sách các nguyên mẫu hàm cần quan tâm trong tệp các đơn vị kiểm thử \textit{a.cpp}, \textit{a.hpp}, \textit{b.hpp} và \textit{c.hpp} khi áp dụng phương pháp đề xuất. Dòng đầu tiên cho biết nguyên mẫu hàm \tcode{func(int const*, int)} cần được xử lý, tương đương với hàm \tcode{func(const int* a, int b)} trong mã nguồn \textit{b.hpp} (dòng 16 trong Đoạn~mã~\ref{cod:undef-hpp}). Dòng 2 và 3 biểu thị cú pháp của hàm template. Đối với trình biên dịch, các lời gọi hàm template với các kiểu đối số khác nhau sẽ tạo ra các chữ ký hàm khác nhau. Do hàm \tcode{foo} và \tcode{gamma} gọi hàm \tcode{maxT} với hai đối số kiểu khác nhau nên danh sách các nguyên mẫu hàm thiếu định nghĩa chứa chữ ký hàm cho cả hai kiểu này. Tiếp theo, nguyên mẫu hàm ở dòng 4 tương ứng hàm \tcode{delta(int* const x)} trong tệp c.hpp. Tham số hiển thị ở tệp mã nguồn và trên danh sách khác nhau là bởi trình biên dịch chỉ quan tâm tới kiểu của tham số và loại bỏ lớp lưu trữ (storage class) ngoài cùng của tham số đó. Tham số \tcode{x} của hàm \tcode{delta} có kiểu là \tcode{int* const} tức con trỏ hằng trỏ tới một biến kiểu nguyên. Trình biên dịch chuyển kiểu của tham số trên thành \tcode{int*}. Trong trường hợp của hai hàm \tcode{func}, tham số đầu của hai hàm khác nhau là bởi tham số \tcode{const int* a} được trình biên dịch chuyển thành kiểu \tcode{const int*} do từ khoá \tcode{const} là lớp lưu trữ của biến được tham số trỏ tới. Cuối cùng nguyên mẫu hàm \tcode{A::bar(bool)} tương ứng với nguyên mẫu hàm \tcode{int bar(bool b)} trong lớp \tcode{A} (dòng 7 trong Đoạn mã \ref{cod:undef-hpp}).
+\begin{figure}[t]
+\begin{lstlisting}[language=C++, caption={Danh sách các nguyên mẫu hàm thiếu định nghĩa tìm bởi trình biên dịch.}, label={cod:result-undef}, captionpos=b]
+func(int const*, int)
+double maxT<double>(double, double)        
+int maxT<int>(int, int)     
+delta(int*)
+A::bar(bool)         
+\end{lstlisting}
+\end{figure}
+\subsubsection*{Lọc tìm ứng viên hợp lệ}
+Như đã mô tả trong ví dụ minh hoạ ở Đoạn mã \ref{cod:result-undef}, mỗi nguyên mẫu hàm trong danh sách trả về bởi trình biên dịch sẽ tương ứng với một số nguyên mẫu hàm trong mã nguồn gốc. Để ánh xạ từng nguyên mẫu hàm cần quan tâm tới đúng nguyên mẫu hàm trong đơn vị kiểm thử, phương pháp đề xuất sử dụng ba tiêu chí để đánh giá độ phù hợp của từng ứng viên. Tiêu chí đầu tiên đó là hàm ứng viên chưa được ánh xạ bởi bất kỳ nguyên mẫu hàm nào trên danh sách. Tiêu chí thứ hai đó là số lượng tham số và phạm vi định danh của hai hàm phải giống nhau. Tiêu chí này giúp giảm số lượng các ứng viên có cùng tên cần xét. Cuối cùng, ứng viên hợp lệ nếu từng tham số đã chuẩn hoá của ứng viên có cùng kiểu với tham số tương ứng của nguyên mẫu hàm.
+\begin{algorithm}
+    \small
+    \caption{Thuật toán lọc tìm ứng viên hợp lệ}
+    \label{alg:filter-undef}
+    \SetKwComment{Comment}{/* }{ */} 
+    \KwIn{~$undef\_params$ - list of parameters extracted from the string $undef$ \\
+    \hskip 1.1cm $undef\_scope$ - the scope qualifier of $undef$\\
+    \hskip 1.1cm  $candidates$ - list of function prototypes having the same name
+    }
+    \KwOut{~$qualified\_cans$ - list of qualified function prototypes}
+					
+    $qualified\_cans \leftarrow$ Initial empty list\;
+    \For {$candidate : candidates$} {
+        \uIf {$candidate$ \textbf{is} \textit{handled}} {
+            \textbf{continue}
+        }
+        \Else {
+            $can\_params \leftarrow$ Extract a list of parameters of function $candidate$\;
+            $can\_scope\leftarrow$ Get the scope qualifier of $candidate$\;
+            \uIf {$can\_params.length \neq undef\_params.length$ \textbf{or} $can\_scope \neq undef\_scope$} {
+                \textbf{continue}
+            }
+            \Else {
+                $same\_params \leftarrow$ \textbf{True}\;
+                $iter\leftarrow$ 1 \Comment*[r]{Assume the list starts at index 1}
+                \While{$iter \leq can\_params.length$} {
+                    $can\_param\_iter\leftarrow$ Normalize the $iter^{th}$ param of $can\_params$\;
+                    $undef\_param\leftarrow$ Get the $iter^{th}$ param of $under\_params$ \;
+                    \uIf{$can\_param\_iter$ \textbf{has the same type with} $under\_params$} {
+                        $iter++$
+                    }
+                    \Else {
+                        $same\_params\leftarrow$ \textbf{False}\;
+                        \textbf{break}
+                    }
+                }
+
+                \If{$same\_params\leftarrow$ \textbf{True}} {
+                    Set $candidate$ state to $handled$\;
+                    Push $candidate$ into $qualified\_cans$\;
+                }
+            }
+        }
+    }
+    \KwRet{$qualified\_cans$}
+\end{algorithm}
+
+Thuật toán \ref{alg:filter-undef} mô tả chi tiết cách áp dụng ba tiêu chí để lọc ra các ứng viên hợp lệ. Đầu vào của thuật toán gồm danh sách tham số trích xuất từ nguyên mẫu hàm cần tìm và danh sách nguyên mẫu hàm ứng viên trong mã nguồn kiểm thử. Mỗi ứng viên sẽ được xét duyệt lần lượt trên ba tiêu chí (dòng 3-28). Nếu ứng viên $candidate$ đã được ánh xạ (hay có trạng thái $handled$), ứng viên sẽ được bỏ qua (dòng 3-4). Ngược lại, danh sách tham số của ứng viên $candidate$ được trích xuất để sử dụng cho hai tiêu chí còn lại (dòng~6). Nếu số lượng tham số hoặc phạm vi định danh của ứng viên khác nguyên mẫu hàm đầu vào thì ứng viên này sẽ được bỏ qua (dòng~8-9). Để áp dụng tiêu chí thứ ba một cách hiệu quả, phương pháp đề xuất xét duyệt lần lượt từng tham số và dừng lại khi gặp tham số đầu tiên không hợp lệ. Trước hết, thuật toán khởi tạo biến $same\_params$ dùng để đánh dấu tất cả tham số đều hợp lệ và gán biến $iter$ bằng vị trí đầu tiên trong danh sách tham số (dòng~11-12). Tiếp đó, quá trình lặp đánh giá từng tham số diễn ra cho đến hết danh sách tham số hoặc gặp tham số không hợp lệ (dòng~13-22). Tham số thứ $iter$ của ứng viên và hàm đầu vào được lấy ra (dòng~13-14). Do tham số của hàm đầu vào đã được chuẩn hoá theo tiêu chuẩn của C++\footnote{https://www.open-std.org/jtc1/sc22/wg21/docs/standards}\footnote{https://en.cppreference.com/w/cpp/language/function} nên tham số của ứng viên cũng sẽ được đưa về theo các tiêu chuẩn này. Nếu hai tham số đang xét có cùng kiểu thì thuật toán sẽ chuyển sang tham số tiếp theo (dòng 16-17). Ngược lại, quá trình lặp sẽ kết thúc và thuật toán đánh dấu tính hợp lệ là $False$ (dòng 19-20). Sau quá trình đánh giá, nếu tất cả tham số của ứng viên đều hợp lệ, thuật toán chuyển trạng thái của ứng viên thành đã được ánh xạ và thêm vào danh sách ứng viên hợp lệ.
+
+\subsubsection*{Ví dụ về xử lý nguyên mẫu hàm thiếu định nghĩa}
+Để làm rõ hơn cách hoạt động của Thuật toán \ref{alg:filter-undef}, ta xét ví dụ áp dụng Thuật toán \ref{alg:handle-ref} trên danh sách các hàm trả về ở Đoạn mã \ref{cod:result-undef}. Xét ví dụ áp dụng phương pháp đề xuất trên xâu ký tự \textit{func(int const*, int)} (dòng 1), trước hết AST của nguyên mẫu hàm được xây dựng như Hình \ref{fig:func-ast}. AST gồm hai thành phần chính: tên của hàm (nút trái) và danh sách tham số (nút phải). Dựa vào thông tin trên cây AST, thuật toán trích xuất được tên \tcode{func} và danh sách tham số \tcode{{int const*, int}} và phạm vi định danh là không gian tên toàn cục. Tiếp theo thuật toán thu thập danh sách các nguyên mẫu hàm ứng viên có cùng tên \tcode{func} trong mã nguồn kiểm thử. Từ Đoạn mã \ref{cod:undef-hpp}, thuật toán thu được hai hàm \tcode{func(int *a, int b)} và \tcode{func(const int* a, int b)} (dòng 15-16). Sau đó, phương pháp đề xuất áp dụng Thuật toán \ref{alg:filter-undef} với hai ứng viên cùng các thông tin trích xuất được. Bảng \ref{tab:filter-func} minh hoạ cho quá trình lọc hai ứng viên. Các ứng viên được xét lần lượt theo thứ tự xuất hiện từ trên xuống của bảng. Với mỗi ứng viên, thuật toán lọc trên từng tiêu chí được liệt kê theo thứ tự từ trên xuống và thuật toán dừng khi tất cả tiêu chí đều hợp lệ hoặc gặp tiêu chí đầu tiên không hợp lệ. Bảng minh hoạ cho thấy ứng viên \tcode{func(int* a, int b)} không hợp lệ do kiểu của tham số đầu tiên sau khi chuẩn hoá là \tcode{int*}, không phải \tcode{int const*}. Ứng viên \tcode{func(const int* a, int b)} đều hợp lệ trên tất cả các tiêu chí nên nguyên mẫu hàm này sẽ được sinh thân hàm giả. \\
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\linewidth]{images/func-ast}
+    \caption{AST (bên trái) và các thông tin trích xuất được (bên phải) của nguyên mẫu hàm \tcode{func(int const*, int}) trong Đoạn mã \ref{cod:result-undef}.}
+    \label{fig:func-ast}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Bảng minh hoạ tính hợp lệ của hai ứng viên cùng tên \tcode{func} trên từng tiêu chí}
+\label{tab:filter-func}
+\begin{tabular}{|l|ll|l|}
+\hline
+\textbf{Ứng viên}                          & \multicolumn{2}{l|}{\textbf{Tiêu chí}}                                                            & \textbf{Hợp lệ} \\ \hline
+\multirow{3}{*}{\tcode{func(int* a, int b)}}       & \multicolumn{2}{l|}{Chưa có ánh xạ}                                                               & Có              \\ \cline{2-4} 
+                                           & \multicolumn{2}{l|}{\begin{tabular}[c]{@{}l@{}}Số lượng tham số\\ Phạm vi định danh\end{tabular}} & Có              \\ \cline{2-4} 
+                                           & \multicolumn{1}{l|}{Danh sách kiểu tham số}                              & int*                   & Không           \\ \hline
+\multirow{4}{*}{\tcode{func(const int* a, int b)}} & \multicolumn{2}{l|}{Chưa có ánh xạ}                                                               & Có              \\ \cline{2-4} 
+                                           & \multicolumn{2}{l|}{\begin{tabular}[c]{@{}l@{}}Số lượng tham số\\ Phạm vi định danh\end{tabular}} & Có              \\ \cline{2-4} 
+                                           & \multicolumn{1}{l|}{\multirow{2}{*}{Danh sách kiểu tham số}}             & int const*             & Có              \\ \cline{3-4} 
+                                           & \multicolumn{1}{l|}{}                                                    & int                    & Có              \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\linewidth]{images/bar-ast}
+    \caption{AST (bên trái) và các thông tin trích xuất được (bên phải) của nguyên mẫu hàm \tcode{A::bar(bool)} trong Đoạn mã \ref{cod:result-undef}.}
+    \label{fig:bar-ast}
+\end{figure}
+
+Khi xét áp dụng thuật toán với xâu \tcode{func(int const*, int)}, phương pháp đề xuất chưa bộc lộ khả năng giảm số lượng ứng viên cần xét của tiêu chí thứ hai. Nhằm làm rõ khả năng này, ta xét ví dụ áp dụng thuật toán với xâu \tcode{A::bar(bool)}. Tương tự như với xâu \tcode{func(int const*, int)}, trước hết, AST và các thông tin của nguyên mẫu hàm được trích xuất như Hình \ref{fig:bar-ast}. Phạm vi định danh của nguyên mẫu hàm đang xét không phải không gian tên toàn cục mà thuộc về không gian tên của lớp \tcode{A}. Các ứng viên có cùng tên \tcode{bar} trong mã nguồn kiểm thử bao gồm hàm \tcode{A::bar(bool~b)} và \tcode{bar(bool~b)}. Dựa các thông tin trích xuất được, quá trình lọc ứng viên áp dụng Thuật~toán~\ref{alg:filter-undef} và được minh hoạ qua Bảng \ref{tab:filter-bar}. Như vậy, khi xét ứng viên \tcode{bar(bool~b)}, Thuật~toán~\ref{alg:filter-undef} không cần xét tính hợp lệ của tiêu chí thứ ba mà vẫn loại bỏ được ứng viên. Điều này có thể lý giải bởi phạm vi định danh của ứng viên này là không gian tên toàn cục, không phải trong không tên của lớp \tcode{A}. Áp dụng thuật toán đề xuất trên các xâu còn lại trong danh sách, phương pháp đề xuất thu được mã nguồn kiểm thử đã bổ sung các thân hàm giả cần thiết như trong Đoạn mã \ref{cod:final-undef}. Từ danh sách các nguyên mẫu hàm cần quan tâm trả về bởi trình biên dịch, phương pháp đề xuất đã thêm thân hàm giả \tcode{\{/*~Insert~stub~code~later~*/\}} vào các nguyên mẫu hàm tương ứng trong mã nguồn kiểm thử. Các nguyên mẫu hàm này sau đó sẽ được thiết lập và sinh stub tự động trong quá trình sinh dữ liệu kiểm thử tự động.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+\begin{table}[h]
+\centering
+\caption{Bảng minh hoạ tính hợp lệ của hai ứng viên cùng tên \tcode{bar} trên từng tiêu chí}
+\label{tab:filter-bar}
+\begin{tabular}{|l|ll|l|}
+\hline
+\textbf{Ứng viên}                   & \multicolumn{2}{l|}{\textbf{Tiêu chí}}                                                            & \textbf{Hợp lệ} \\ \hline
+\multirow{3}{*}{\tcode{int A::bar(bool b)}} & \multicolumn{2}{l|}{Chưa có ánh xạ}                                                               & Có              \\ \cline{2-4} 
+                                    & \multicolumn{2}{l|}{\begin{tabular}[c]{@{}l@{}}Số lượng tham số\\ Phạm vi định danh\end{tabular}} & Có              \\ \cline{2-4} 
+                                    & \multicolumn{1}{l|}{Danh sách kiểu tham số}                         & bool                        & Có              \\ \hline
+\multirow{2}{*}{int bar(bool b)}    & \multicolumn{2}{l|}{Chưa có ánh xạ}                                                               & Có              \\ \cline{2-4} 
+                                    & \multicolumn{2}{l|}{\begin{tabular}[c]{@{}l@{}}Số lượng tham số\\ Phạm vi định danh\end{tabular}} & Không           \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+    \centering
+    \begin{lstlisting}[language=C++, caption={Mã nguồn tệp a.hpp, b.hpp và c.hpp sau khi áp dụng phương pháp xử lý nguyên mẫu hàm thiếu định nghĩa.}, label={cod:final-undef}, captionpos=b]
+// a.hpp
+#include "c.hpp"
+class A {
+public: 
+    int x;
+    A(int _x) { x = _x; }
+    int bar(bool b) {/* Insert stub code later */ }
+    double echo() {
+        return x + delta(&x);
+    }
+};
+int bar(bool b);
+// b.hpp
+template <typename T> T max(T a) {/* Insert stub code later */ }
+int func(int *a, int b);
+int func(const int* a, int b) {/* Insert stub code later */ }
+// c.hpp
+double delta(int* const x) {/* Insert stub code later */ }
+    \end{lstlisting}
+\end{figure}
+
+% \begin{figure}
+%     \begin{subfigure}[b]{.45\linewidth}
+%         \includesvg[width=\linewidth]{images/bar-ast}
+%         \caption{A gull}\label{fig:gull}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{.45\linewidth}
+%         \includesvg[width=\linewidth]{images/maxT-ast}
+%         \caption{A tiger}\label{fig:tiger}
+%     \end{subfigure}
+% \caption{Picture of animals}
+% \label{fig:animals}
+% \end{figure}
+
+\subsection{Phương pháp xử lý nguyên mẫu hàm ảo thiếu định nghĩa} \label{sec:handle-undef-second}
+Như đã đề cập ở Mục \ref{sec:kno-undefine}, các hàm thiếu định nghĩa không chỉ gây lỗi thiếu tham chiếu khi liên kết các tệp đối tượng mà còn gây ra lỗi thiếu bảng hàm ảo. Điều này cũng đồng nghĩa với việc các nguyên mẫu hàm ảo thiếu định nghĩa, nguyên nhân gây ra lỗi, không thể tìm thấy bởi phương pháp đề xuất ở Mục \ref{sec:handle-undef-first} do quá trình liên kết các tệp đối tượng chỉ cho biết lớp đối tượng nào đang thiếu bảng hàm ảo mà không chỉ rõ rằng do nguyên mẫu hàm ảo nào gây ra. Phương pháp đề xuất giải quyết vấn đề này dựa trên việc xét duyệt các đỉnh nguyên mẫu hàm ảo trên từng cây cấu trúc tệp và tìm kiếm sự tồn tại của cạnh quan hệ định nghĩa trỏ tới đỉnh này trong đồ thị cấu trúc mã nguồn. Nếu đỉnh nguyên mẫu hàm ảo không tồn tại cạnh định nghĩa thì phương pháp đề xuất sẽ sinh thân hàm giả cho hàm này.
+
+\subsection*{Thuật toán xử lý nguyên mẫu hàm ảo thiếu định nghĩa}
+
+\begin{algorithm}[t]
+    \small
+    \caption{Thuật toán xử lý nguyên mẫu hàm ảo thiếu định nghĩa}
+    \label{alg:handle-virtual-undef}
+    \KwIn{~$project\_graph$ - the project structure graph}
+    \KwOut{~$project\_graph$ - the modified graph with new definition edges}
+    \For {$file\_tree : project\_graph$} {
+        $cur\_file\_node \leftarrow $ Get file node of $file\_tree$\;
+        $T \leftarrow {file\_tree}$\;
+        $T \leftarrow T \cup$ {Get all file struct tree of file nodes that include $cur\_file\_node$}\;
+        \For{$undef\_virtual : file\_tree$} {
+            $undef\_name \leftarrow$ Get the name of the function from $undef\_virtual$\;
+            $candidates \leftarrow$ Find all definition functions having the same name with $undef\_name$ in $T$\;
+            $undef\_params \leftarrow$ Extract a list of parameters from $undef\_virtual$\;
+            $undef\_scope\leftarrow$ Extract function scope qualifier from $undef\_virtual$\;
+            $qualified\_cans\leftarrow$ \textbf{call} Algorithm \ref{alg:filter-undef} $(undef\_params, undef\_scope, candidates)$\;
+            \uIf{$qualified\_cans = \emptyset$} {
+                Generate a simple function body for $undef\_virtual$\;
+            }
+            \Else{
+                $qc \leftarrow $ Get the first qualified candidate\;
+                Generate definition edge for $qc$ and $undef\_virtual$ on $project\_graph$\;
+            }
+        }
+    }
+    \KwRet{$project\_graph$}
+\end{algorithm}
+
+Phương pháp xử lý nguyên mẫu hàm ảo thiếu định nghĩa được mô tả chi tiết trong Thuật toán \ref{alg:handle-virtual-undef}. Đầu vào của thuật toán là đồ thị cấu trúc mã nguồn được xây dựng ở pha xây dựng môi trường kiểm thử. Thuật toán xét duyệt từng cây cấu trúc tệp $file\_tree$ trong đồ thị đầu vào. Với mỗi cây cấu trúc $file\_tree$, trước hết, thuật toán thu thập tập hợp $T$ các cây cấu trúc có đỉnh tệp có cạnh Include tới đỉnh tệp của $file\_tree$ (dòng~2-4). Bản thân $file\_tree$ cũng được thêm vào tập hợp này để xét trường hợp định nghĩa của nguyên mẫu hàm ảo được khai báo ngay trong chính cây cấu trúc chứa nguyên mẫu. Tiếp theo, thuật toán xét duyệt từng đỉnh nguyên mẫu hàm ảo có trong cây cấu trúc tệp $file\_tree$. Với mỗi đỉnh nguyên mẫu hàm ảo, thuật toán trích xuất các thông tin như tên (dòng 6), danh sách tham số (dòng 8) và phạm vi định danh (dòng 9). Danh sách các đỉnh định nghĩa hàm ứng viên có cùng tên được thu thập (dòng 7). Sau đó, thuật toán áp dụng phương pháp lọc tìm kiếm ứng viên phù hợp trong Thuật toán \ref{alg:filter-undef} để lấy danh sách ứng viên hợp lệ (dòng 10). Nếu danh sách ứng viên hợp lệ rỗng tức nguyên mẫu hàm ảo không có định nghĩa hàm tương ứng thì thuật toán sẽ sinh thân hàm giả cho hàm này (dòng 11-12). Ngược lại, do đỉnh định nghĩa hàm luôn là duy nhất nên thuật toán sinh cạnh định nghĩa giữa ứng viên hợp lệ duy nhất và đỉnh nguyên mẫu hàm ảo đang xét (dòng 14-15). Thuật toán diễn ra tương tự với các đỉnh nguyên mẫu hàm ảo còn lại và tương tự với các cây cấu trúc tệp khác. Đầu ra của thuật toán là đồ thị cấu trúc mã nguồn với các cạnh bổ sung. Đồ thị đầu ra sẽ được lưu lại để phục vụ cho các lần kiểm thử sau trên mã nguồn đang xét.
+
+\subsection*{Ví dụ về xử lý nguyên mẫu hàm ảo thiếu định nghĩa}
+Đoạn mã \ref{cod:dep-cpp} và \ref{cod:dep-hpp} trong ví dụ minh họa độ thị cấu trúc mã nguồn chứa hai nguyên mẫu hàm ảo \tcode{beta()} và \tcode{func()}. Trong đó hàm \tcode{beta()} là nguyên mẫu hàm ảo thiếu định nghĩa. Để minh họa phương pháp đề xuất, ta xét ví dụ áp dụng Thuật toán \ref{alg:handle-virtual-undef} để xử lý hai nguyên mẫu hàm ảo trên. Trước hết, thuật toán xét cây cấu trúc tệp có đỉnh tệp \textit{a.hpp} (gọi tắt là cây cấu trúc \textit{a.hpp}) và thu thập tập hợp $T$ chứa các cây cấu trúc tệp có đỉnh tệp có cạnh Include tới đỉnh tệp \textit{a.hpp}. Dựa trên đồ thị cấu trúc mã nguồn như Hình~\ref{fig:dep-graph}, tập $T$ thu được gồm hai cây cấu trúc: cây gốc đang xét \textit{a.hpp} và cây cấu trúc \textit{a.cpp}. Tiếp theo, thuật toán xét từng nguyên mẫu hàm ảo có trong cây cấu trúc \textit{a.hpp}. Đối với hàm \tcode{func()}, thuật toán trích xuất các thông tin của hàm và thu được như sau: tên hàm là \tcode{func}, hàm không có tham số và phạm vi định danh là lớp \tcode{A}. Dựa trên thông tin này, thuật toán tìm các ứng viên có cùng tên \tcode{func} và thu được đỉnh định nghĩa hàm \tcode{A::func()}. Do ứng viên này hợp lệ trên cả ba tiêu chí của Thuật toán \ref{alg:filter-undef} nên ứng viên này là định nghĩa hàm của nguyên mẫu hàm \tcode{func()}. Do có tồn tại một ứng viên hợp lệ nên thuật toán sinh cạnh định nghĩa giữa đỉnh ứng viên và đỉnh nguyên mẫu hàm \tcode{func()}. Đối với hàm \tcode{beta()}, các bước tương tự được áp dụng. Tuy nhiên, do không tồn tại ứng viên có cùng tên \tcode{beta} nên nguyên mẫu hàm ảo này được xác định là thiếu định nghĩa. Do vậy, thuật toán sinh thân hàm giả cho hàm này theo quy tắc của phương pháp xử lý nguyên mẫu hàm thiếu định nghĩa ở Mục \ref{sec:handle-undef-first} Thuật toán tiếp tục xử lý tương tự với cây cấu trúc \textit{a.cpp}. Hình \ref{fig:dep-graph-final} mô tả sự thay đổi của đồ thị cấu trúc mã nguồn sau quá trình xử lý. Cạnh đậm, nét đứt, đầu hình tròn thể hiện cạnh định nghĩa được bổ sung sau quá trình.
+
+\begin{figure}[!h]
+    \centering
+    \includesvg[width=\linewidth]{images/dep-graph-final}
+    \caption{Ví dụ minh hoạ sự thay đổi đồ thị cấu trúc mã nguồn \textit{a.hpp} và \textit{a.cpp} sau khi xử lý hàm thiếu định nghĩa.}
+    \label{fig:dep-graph-final}
+\end{figure}
+
+\section{Pha sinh dữ liệu kiểm thử tự động} \label{sec:autogen}
+Trong các dự án thực tế, mỗi hàm cần kiểm thử có thể chứa rất nhiều lời gọi tới các hàm khác trong mã nguồn kiểm thử. Do các dự án hiện nay thường phát triển song song với kiểm thử đảm bảo chất lượng nên mã nguồn có thể chứa nhiều hàm chưa được hoàn thiện logic hoặc mới chỉ có nguyên mẫu hàm. Khóa luận đã đề xuất phương pháp để giải quyết các nguyên mẫu hàm thiếu định nghĩa song vẫn cần giải quyết bài toán sinh dữ liệu kiểm thử tự động một cách hiệu quả cho các mã nguồn chưa hoàn thiện. Do vậy, khóa luận đề xuất phương pháp sinh dữ liệu kiểm thử tự động áp dụng phương pháp kiểm thử tượng trưng động \cite{DART, CUTE, TUNG2022106821} và phương pháp sinh giả lập mã nguồn (stub) tự động AS4UT \cite{9953784} để xử lý bài toán vừa đề cập. Với các dự án hướng đối tượng C++, các biến được sử dụng trong hàm có thể xoay quanh các đối tượng. Các đối tượng có thể chứa các phương thức chưa được hoàn thiện, chỉ có nguyên mẫu hàm để thông báo cho đội phát triển biết đối tượng này có thể làm gì. Như vậy, luồng logic trong hàm có thể ảnh hưởng lớn bởi các phương thức của đối tượng. Do phương pháp sinh stub tự động chưa xử lý được các trường hợp liên quan đến phương thức của đối tượng nên khóa luận bổ sung cải tiến để xử lý vấn đề trên.
+
+\subsection{Tổng quan pha sinh dữ liệu kiểm thử tự động}
+
+\begin{figure}[hb]
+    \centering
+    \includesvg[width=\linewidth]{images/autogen-flow}
+    \caption{Tổng quan quá trình sinh dữ liệu kiểm thử tự động.}
+    \label{fig:autogen-flow}
+\end{figure}
+
+Về tổng quan, quá trình sinh dữ liệu kiểm thử tự động bao gồm ba bước như trong Hình \ref{fig:autogen-flow}. Các bước trong phương pháp đề xuất được kế thừa từ phương pháp sinh dữ liệu kiểm thử tự động cho con trỏ void và con trỏ hàm VFP \cite{TUNG2022106821}. Trong đó, bước sinh dữ liệu kiểm thử có hướng được bổ sung phương pháp sinh stub tự động AS4UT và phương pháp xử lý lời gọi phương thức của đối tượng do khóa luận đề xuất. Bước đầu tiên trong quá trình là bước sinh dữ liệu kiểm thử ngẫu nhiên. Nhiệm vụ của bước này là phân tích kiểu dữ liệu của các tham số được sử dụng trong hàm đang kiểm thử. Các tham số này là tham số đầu vào của hàm, biến toàn cục và một đối tượng giả để gọi hàm nếu hàm đang kiểm thử là một phương thức trong lớp. Bước sinh dữ liệu ngẫu nhiên sẽ sinh giá trị ngẫu nhiên trong khoảng giá trị cho phép của kiểu dữ liệu cho từng tham số. Trong bước này, giá trị trả về của các lời gọi hàm cũng được sinh ngẫu nhiên. Tập hợp giá trị của tập tham số sẽ tạo thành các bộ dữ liệu kiểm thử. Bước tiếp theo là bước thực thi dữ liệu kiểm thử và phân tích đường thi hành. Bước này có hai nhiệm vụ chính. Nhiệm vụ thứ nhất đó là thực thi các bộ dữ liệu kiểm thử tạo ra bởi bước sinh dữ liệu kiểm thử ngẫu nhiên hoặc bước sinh dữ liệu kiểm thử có hướng. Đầu ra của việc thực thi dữ liệu kiểm thử là tập đường thi hành được viếng thăm bởi các bộ dữ liệu kiểm thử. Nhiệm vụ thứ hai của bước này đó là phân tích đường thi hành nhằm tìm ra đường thi hành ngắn nhất tới câu lệnh hoặc điều kiện chưa được viếng thăm. Nếu tồn tại đường thi hành chưa được viếng thăm, bước bốn sinh dữ liệu kiểm thử có hướng và tạo stub tự động được thực hiện. Nhiệm vụ của bước bốn là sinh dữ liệu kiểm thử tự động sao cho thăm được các câu lệnh hoặc điều kiện chưa được thăm. Phương pháp AS4UT \cite{9953784} được tích hợp trong quá trình thực thi tượng trưng nhằm xử lý các lời gọi hàm trong đơn vị kiểm thử. Cụ thể, khóa luận áp dụng bước tiền xử lý CFG trong phương pháp AS4UT trong quá trình thực thi tượng trưng trên một đường thi hành. Khóa luận cải tiến bước tiền xử lý CFG này và bổ sung bước xử lý lời gọi phương thức. Chi tiết về phương pháp xử lý lời gọi phương thức được trình bày ở Mục \ref{sec:autostub-obj} Đầu ra của bước này là tập các ràng buộc trên đường thi hành đang xét. Sau đó, phương pháp đề xuất sử dụng bộ giải hệ Z3 để tìm nghiệm cho các ràng buộc và chuyển nghiệm thành dữ liệu kiểm thử mới. Các dữ liệu kiểm thử mới này tiếp tục được thực thi và phân tích đường thi hành đầu ra. Quá trình sinh dữ liệu kiểm thử tự động được lặp lại cho đến khi không thể tìm thấy đường thi hành chưa thử viếng thăm.
+
+\subsection{Phương pháp xử lý lời gọi phương thức của đối tượng} \label{sec:autostub-obj}
+Như đã đề cập ở trên, phương thức của đối tượng có ảnh hưởng lớn tới hàm đang kiểm thử bởi thuộc tính của đối tượng có thể thay đổi qua các phương thức này. Khi đó, sau lời gọi phương thức, các biểu thức điều kiện sử dụng thuộc tính phụ thuộc nhiều vào sự thay đổi bởi lời gọi phương thức. Để thăm được các điều kiện chưa thăm được do có sự thay đổi bởi lời gọi phương thức, quá trình tiền xử lý CFG cần chú trọng xử lý các lời gọi này. Khóa luận đề xuất Thuật toán \ref{alg:autostub-object} để xử lý lời gọi phương thức. Ý tưởng chính của thuật toán đề xuất đó là bổ sung một đối tượng giả kèm theo giá trị trả về khi xuất hiện lời gọi phương thức và cập nhật biến thực thi tượng trưng của đối tượng gọi phương thức bằng đối tượng giả. 
+
+Thuận toán \ref{alg:autostub-object} có bốn đầu vào lần lượt là bảng băm $MAP$, bảng tham chiếu $REF$, câu lệnh xuất lệnh lời gọi hàm $stm$ và đỉnh CFG $cfg\_node$ tương ứng với câu lệnh đang xét. Bảng băm $MAP$ là bảng băm ánh xạ các hàm sang số lần gọi của hàm đó trong đơn vị kiểm thử. Bảng tham chiếu $REF$ là bảng lưu trữ ánh xạ giữa biến tượng trưng và giá trị tượng trưng tương ứng của nó. Bảng $MAP$ và $REF$ được phương pháp đề xuất kế thừa từ phương pháp AS4UT. Đỉnh CFG đầu vào được lấy từ CFG gốc của đơn vị kiểm thử. Thuật toán bắt đầu với việc trích xuất hàm được gọi $function$ từ đỉnh CFG đầu vào (dòng 1) và khởi tạo số lần gọi hiện tại của hàm đó là 0 (dòng 2). Nếu hàm $function$ đã tồn tại trong $MAP$ thì thuật toán cập nhật số lần gọi hiện tại bằng số lần gọi cuối của $function$ trong $MAP$ (dòng 3-5). Tiếp theo, thuật toán tăng số lần gọi hiện tại $cur\_call$ lên 1 (dòng 6) và thêm cặp ánh xạ $(function, cur\_call)$ vào $MAP$ (dòng 7). Giá trị cũ nếu có của $function$ trong $MAP$ sẽ được thay bởi cặp ánh xạ mới này. Thuật toán trích xuất tên $func\_name$ và kiểu trả về $return\_type$ của $function$ (dòng 8) và xác định đối tượng gọi hàm $function$ (dòng 9). Nếu đối tượng trả về khác $NULL$ (hay hàm đang xét là phương thức) thuật toán sẽ tạo đối tượng giả trả về (dòng 11-16). Trước hết, tên $object\_name$ và kiểu $object\_type$ của đối tượng được trích xuất (dòng 11). Sau đó, thuật toán tạo tên đối tượng giả $stub\_name$ (dòng 12) và khởi tạo đối tượng giả với tên vừa tạo và kiểu đã xác định (dòng 13). Tiếp theo, thuật toán tìm kiếm biến tượng trưng $ref\_object$ có cùng tên và kiểu của đối tượng gốc (dòng 14). Đối tượng giả sẽ được đánh dấu trỏ tới biến tượng trưng $ref\_object$ (dòng 15) và được thêm vào $REF$ (dòng 16). Việc đánh dấu đối tượng giả trỏ tới biến tượng trưng của đối tượng gốc có nghĩa là đối tượng giả này sẽ được sử dụng thay cho biến tượng trưng trong các câu lệnh sau của đơn vị kiểm thử. Bước sinh biến tượng trưng cho giá trị trả về (dòng 18-23) được kế thừa từ phương pháp AS4UT. Trước hết, thuật toán sinh biến tượng trưng cho giá trị trả về của hàm (dòng 19-20). Sau đó, biến tượng trưng này được thêm vào bảng $REF$ (dòng 21) và thuật toán thay lời gọi hàm trong $stm$ bằng biến tượng trưng vừa tạo. Cuối cùng, thuật toán trả về bảng $MAP$, $REF$ và câu lệnh đã được cập nhật. Các thành phần sẽ tiếp tục được sử dụng bởi quá trình thực thi tượng trưng.  
+
+\begin{algorithm}[!h]
+    \small
+    \caption{Thuật toán xử lý lời gọi phương thức của đối tượng}
+    \label{alg:autostub-object}
+    \KwIn{~$MAP$ - the map table transforming a function to its number of call\\
+    \hskip 1.2cm $REF$ - the reference table containing symbolic variables\\
+    \hskip 1.2cm $stm$ - the statement containing the function call expression \\
+    \hskip 1.2cm $cfg\_node$ - the corresponding CFG node of current $stm$
+    }
+    \KwOut{~$MAP$ - the updated map table \\
+    \hskip 1.2cm $REF$ - the updated reference table \\
+    \hskip 1.2cm $stm$ - the refactored statement
+    }
+    $function \leftarrow$ Get the called function from $cfg\_node$\;
+    $cur\_call \leftarrow 0$\;
+    \If{$function \in MAP$} {
+        $cur\_call \leftarrow $ Get the number of call of $function$ from $MAP$\; 
+    }
+    $cur\_call++$\;
+    Insert $(function, cur\_call)$ into $MAP$\;
+    $(func\_name, return\_type) \leftarrow$ Get the name and return type of $function$\;
+    $call\_object \leftarrow$ Get the object calling the $function$\;
+    \If{$call\_object \neq NULL$} {
+        $(object\_name, object\_type) \leftarrow$ Get the name and type of $call\_object$\;
+        $stub\_name \leftarrow func\_name + "\_call" + cur\_call + "\_" + object\_name$\;
+        $instance\_stub\_var \leftarrow$ Generate new instance symbolic variable $(stub\_name, object\_type)$\;
+        $ref\_object \leftarrow$ Get the class/struct symbolic variable having the same $(object\_name, object\_type)$ from $REF$\;
+        Mark $instance\_stub\_var$ pointing to $ref\_object$\;
+        Add $instance\_stub\_var$ into $REF$\;
+    }
+    \If{$return\_type$ \textbf{is not} void} {
+        $stub\_name \leftarrow func\_name + "\_call" + cur\_call$\;
+        $return\_stub\_var \leftarrow$ Generate return symbolic variable $(stub\_name, return\_type)$\;
+        Add $return\_stub\_var$ into $REF$\;
+        $stm \leftarrow$ Replace function call expression by $stub\_name$\;
+    }
+    \KwRet{$(MAP, REF, stm)$}
+\end{algorithm}
+
+\subsection{Ví dụ về thực thi tượng trưng kết hợp xử lý lời gọi phương thức của đối tượng}
+Đoạn mã \ref{cod:autostub-object} mô tả đoạn mã nguồn ví dụ minh họa phương pháp tạo stub tự động cho phương thức của đối tượng. Đơn vị được kiểm thử là hàm \tcode{foo(B param)} với tham số đầu vào là \tcode{param}, một đối tượng của lớp \tcode{B}. Đồ thị dòng điều khiển của đơn vị này được mô tả trong Hình \ref{fig:cfg-object}. Logic của đơn vị kiểm thử gồm hai câu lệnh điều kiện, một câu lệnh gọi hàm và một hai câu lệnh trả giá trị. Dựa trên đồ thị dòng điều khiển khi xét đường thi hành 8-9-10-11, ta có thể nhận thấy điều kiện \tcode{if (param.b == 2)} tại dòng 10 bị ảnh hưởng với câu lệnh gọi phương thức ở dòng số 9. Hình \ref{fig:autostub-sample} mô tả quá trình thực thi tượng trưng áp dụng phương pháp đề xuất trên đường thi hành 8-9-10-11. Hình vẽ có bốn cột lần lượt biểu diễn đỉnh CFG đang xét, dữ liệu trong bảng $MAP$ và bảng $REF$ sau bước thực thi tượng trưng tại đỉnh CFG và cuối cùng là ràng buộc mới được sinh ra. Đầu tiên, ở trạng thái khởi tạo, quá trình thực thi tượng trưng tạo các biến tượng trưng cho tham số của hàm. Hàm \tcode{foo(B param)} có một tham số đầu vào nên một biến tượng trưng \tcode{param} được tạo ra và có giá trị tượng trưng \tcode{sym\_param}. Khi xét đỉnh CFG của câu điều kiện \tcode{if (param.b == 1)}, dựa trên bảng $REF$ quá trình thực thi tượng trưng tạo ra ràng buộc mới \tcode{sym\_param.b == 1}. Xét tiếp đỉnh CFG của câu lệnh \tcode{int ret = param.stub()}, lúc này, Thuật toán \ref{alg:autostub-object} được áp dụng để xử lý lời gọi phương thức của đối tượng \tcode{param}. Trước hết thuật toán cập nhật số lần gọi hàm \tcode{stub} lên 1 và lưu vào bảng $MAP$. Do hàm \tcode{stub} là phương thức nên thuật toán sẽ sinh đối tượng giả kèm theo giá trị trả về cho hàm này. Ba biến tượng trưng mới được cập nhật trong bảng $REF$ gồm \tcode{stub\_call1} - giá trị trả về tượng trưng, \tcode{ret} - biến được gán giá trị trả về của phương thức và \tcode{stub\_call1\_param} - đối tượng giả trỏ tới biến tượng trưng \tcode{param}. Xét tiếp tới đỉnh CFG của câu điều kiện \tcode{if (param.b == 2)}, dựa trên thông tin của bảng $REF$, quá trình thực thi tượng trưng sẽ chuyển đổi biến \tcode{param} gốc thành \tcode{sym\_param} và từ \tcode{sym\_param} thành \tcode{stub\_call1\_param}. Như vậy một ràng buộc mới được sinh ra đó là \tcode{stub\_call1\_param.b == 2}. Ràng buộc này có thể hiểu là thông qua lời gọi phương thức \tcode{stub}, giá trị của thuộc tính \tcode{b} trong đối tượng \tcode{param} cần phải thay đổi thành 2 thay vì 1 như khởi tạo. Qua quá trình thực thi tượng trưng trên đường thi hành 8-9-10-11 kết hợp với bảng $MAP$ và $REF$, ta thu được ba ràng buộc {stub\_call == 1, sym\_param.b == 1, stub\_call1\_param.b == 2}. Các ràng buộc này sau đó được chuẩn hóa theo cú pháp của SMTLib (ví dụ như hay \tcode{.b} thành \tcode{\_attr\_b}) và được đưa vào bộ giải Z3 để tìm nghiệm. Từ nghiệm tìm được, ta xác định được bộ dữ liệu kiểm thử để đi được đường thi hành 8-9-10-11 đó là biến \tcode{param} đầu cần khởi tạo thuộc tính \tcode{b} với giá trị 1, hàm \tcode{stub} được gọi 1 lần và trả về giá trị bất kỳ đồng thời thay đổi giá trị của thuộc tính \tcode{b} thành 2. 
+\begin{figure}[ht]
+    \begin{tabular}{cc}
+    \begin{minipage}[b]{0.5\textwidth}
+    \begin{lstlisting}[language=C++, caption={Mã nguồn minh họa phương pháp tạo stub tự động cho phương thức của đối tượng.}, label={cod:autostub-object}, captionpos=b]
+class B {
+public:
+    int b;
+    B() {}
+    int stub() {}
+};
+int foo(B param) {
+    if (param.b == 1) {
+        int ret = param.stub();
+        if (param.b == 2) {
+            return ret;
+        }
+    }
+    return 0;
+}
+    \end{lstlisting}
+    \end{minipage}
+    & \begin{minipage}[b]{0.4\textwidth}
+        \centering
+        \includesvg[width=\linewidth]{images/cfg-object.svg}
+        \caption{Đồ thị dòng điều khiển của hàm \tcode{foo(B param)} trong Đoạn mã \ref{cod:autostub-object}.}
+        \label{fig:cfg-object}
+    \end{minipage}
+    \end{tabular}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\linewidth]{images/autostub-sample.svg}
+    \caption{Quá trình thực thi tượng trưng kết hợp Thuật toán \ref{alg:autostub-object}.}
+    \label{fig:autostub-sample}
+\end{figure}
+Đoạn mã \ref{cod:stub-final} mô tả nội dung của hàm \tcode{stub} với bộ dữ liệu kiểm thử mới. Biến tĩnh \tcode{cur\_call} lưu số lần gọi hàm trong một lần thực thi ca kiểm thử. Biến này được tăng lên một với mỗi lần gọi hàm. Câu lệnh điều kiện ở dòng 8 dùng để kiểm tra xem chương trình đang thực hiện kiểm thử cho hàm nào. Biến \tcode{TEST\_CASE\_NAME} là một xâu kí tự toàn cục tạo bởi trình điều khiển kiểm thử nhằm lưu tên hàm đang kiểm thử. Do ví dụ đang xét kiểm thử trên hàm \tcode{foo} nên giả lập mã nguồn của hàm \tcode{stub} sẽ nằm trong các dòng 9-14. Câu lệnh điều kiện \tcode{cur\_call == 1} thể hiện nếu đây là lần gọi thứ nhất của hàm \tcode{stub}, hàm này sẽ thực hiện các giả lập mã nguồn được viết trong nhánh đúng của điều kiện này. Dòng 10-13 của mã nguồn kiểm thử cho biết mã nguồn giả lập cho lần gọi thứ nhất thực hiện hai nhiệm vụ. Nhiệm vụ thứ nhất đó là thay đổi giá trị của thuộc tính \tcode{b} (dòng 11). Nhiệm vụ thứ hai đó là tạo giá trị trả về cho hàm. Do không có ràng buộc liên quan đến giá trị trả về của hàm \tcode{stub} nên phương pháp đề xuất chọn giá trị 0 để trả về.
+
+\begin{figure}[h]
+\begin{lstlisting}[language=C++, caption={Sự thay đổi của hàm \tcode{stub} với bộ dữ liệu kiểm thử mới.}, label={cod:stub-final}, captionpos=b]
+class B {
+public:
+    int b;
+    B() {}
+    int stub() {
+        static int cur_call = 0;
+        cur_call++;
+        if (TEST_CASE_NAME == "foo") {
+            if (cur_call == 1) {
+                int stub_call1_param_attr_b = 2;
+                this->b = stub_call1_param_attr_b;
+                int stub_call1 = 0;
+                return stub_call1;
+            }
+        }
+    }
+};
+int foo(B param) {
+    if (param.b == 1) {
+        int ret = param.stub();
+        if (param.b == 2) {
+            return ret;
+        }
+    }
+    return 0;
+}
+    \end{lstlisting}
+\end{figure}
