@@ -81,7 +81,8 @@
 % 	\includegraphics[width=0.25\linewidth]{images/Logo_UET.png}\\[1cm]
 	
 	{\Large  \bfseries Doan Duy Tung}\\[2cm]	
-	{ \LARGE \bfseries RESEARCH ON AN AUTOMATED UNIT TESTING SOLUTION FOR C/C++ SOURCE CODE }\\[0.2cm]
+	{ \LARGE \bfseries RESEARCH ON AN AUTOMATED UNIT TESTING}\\[0.2cm] 
+	{\LARGE \bfseries SOLUTION FOR C/C++ SOURCE CODE }\\[0.2cm]
     {\LARGE \bfseries CONTAINING MISSING FUNCTION DEFINITIONS }\\[0.2cm]
 	\hfill\\[1.5cm]
 	{\large \bfseries BACHELOR’S THESIS}\\	
@@ -106,13 +107,13 @@
     \textbf{LỜI CAM ĐOAN}
 \end{center}
 
-Em xin cam đoan: Khóa luận tốt nghiệp với đề tài “Một số cải tiến phương pháp sinh dữ liệu Kiểm thử cho các dự án C/C++ dựa trên phân tích mã nguồn” trong báo cáo này là của em. Những gì em viết ra không có sự sao chép từ các tài liệu, không sử dụng kết quả của người khác mà không trích dẫn cụ thể. Đây là công trình nghiên cứu cá nhân em tự phát triển, không sao chép mã nguồn của người khác. Nếu vi phạm những điều trên, em xin chấp nhận tất cả những truy cứu về trách nhiệm theo quy định của Trường Đại học Công nghệ - ĐHQG Hà Nội.
+Em xin cam đoan: Khóa luận tốt nghiệp với đề tài “Nghiên cứu giải pháp kiểm thử đơn vị tự động cho mã nguồn C/C++ chứa hàm thiếu định nghĩa” trong báo cáo này là của em. Những gì em viết ra không có sự sao chép từ các tài liệu, không sử dụng kết quả của người khác mà không trích dẫn cụ thể. Đây là công trình nghiên cứu cá nhân em tự phát triển, không sao chép mã nguồn của người khác. Nếu vi phạm những điều trên, em xin chấp nhận tất cả những truy cứu về trách nhiệm theo quy định của Trường Đại học Công nghệ - ĐHQGHN.
 
 \begin{flushright}
 	\begin{varwidth}{\linewidth}\centering
-		Hà Nội, ngày 31 tháng 05 năm 2021\\
+		Hà Nội, ngày 30 tháng 11 năm 2023\\
 		Sinh viên\\[2cm]
-		Nguyễn Tùng Lâm
+		Đoàn Duy Tùng
 	\end{varwidth}
 \end{flushright}
 
@@ -123,13 +124,11 @@ Em xin cam đoan: Khóa luận tốt nghiệp với đề tài “Một số c�
     \textbf{LỜI CẢM ƠN}
 \end{center}
 
-Lời đầu tiên cho phép em được gửi lời cảm ơn tới Khoa Công Nghệ Thông Tin – Trường Đại học Công nghệ - ĐHQG Hà Nội đã tạo điều kiện thuận lợi cho em được học tập, nghiên cứu và thực hiện đề tài tốt nghiệp này.
+Lời đầu tiên cho phép em bày tỏ lòng biết ơn chân thành đến  Khoa Công nghệ Thông tin - Trường Đại học Công nghệ, ĐHQGHN, nơi em đã có cơ hội tiếp xúc với những kiến thức mới mẻ và được học hỏi từ những người giáo viên xuất sắc khác.
 
-Em cũng xin được bày tỏ lòng biết ơn sâu sắc tới thầy Phạm Ngọc Hùng và thầy Võ Đình Hiếu đã tận tình hướng dẫn, đóng góp những ý kiến xác đáng để em có thể hoàn thành khóa luận một cách tốt nhất.
+Em xin gửi lời cảm ơn chân thành nhất đến thầy Phạm Ngọc Hùng, người đã là nguồn động viên và hướng dẫn quý báu trong suốt thời gian em học tập, làm việc tại phòng nghiên cứu. Sự hướng dẫn tận tâm và sự hỗ trợ của thầy là động lực lớn giúp em vượt qua những thách thức trong hành trình tìm hiểu, nghiên cứu và hoàn thiện khóa luận tốt nghiệp.
 
-Em cũng vô cùng biết ơn những thầy cô trong trường đã tận tình giảng dạy, trang bị cho em những kiến thức quan trọng để em có hành trang vững chắc cho con đường học vấn của mình.
-
-Cuối cùng, em xin được gửi lời cảm ơn chân thành tới anh Nguyễn Đức Anh, anh Trần Hoàng Việt cũng như toàn thể các anh chị và các bạn tại Phòng thí nghiệm đảm bảo chất lượng phần mềm (Khoa Công nghệ thông tin, Trường Đại học Công nghệ, ĐHQGHN) đã luôn ủng hộ, động viên em trong quá trình hoàn thành khóa luận.
+Cuối cùng, em xin được gửi lời cảm ơn chân thành tới anh Nguyễn Tùng Lâm, anh Nguyễn Vũ Bình Dương cũng như toàn thể các anh chị và các bạn tại Phòng thí nghiệm đảm bảo chất lượng phần mềm (Khoa Công nghệ thông tin, Trường Đại học Công nghệ, ĐHQGHN) đã luôn ủng hộ, động viên em trong quá trình hoàn thành khóa luận. Đặc biệt, em xin chân thành cảm ơn anh Trần Trọng Năm và các anh chị tại đơn vị FPT-GAM đã giúp đỡ, cho phép em sử dụng tài nguyên của đơn vị trong quá trình làm khóa luận.
 
 Chúc mọi người luôn luôn vui vẻ và gặt hái được nhiều thành công trong cuộc sống.
 
