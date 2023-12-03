@@ -111,7 +111,7 @@ Em xin cam đoan: Khóa luận tốt nghiệp với đề tài “Nghiên cứu 
 
 \begin{flushright}
 	\begin{varwidth}{\linewidth}\centering
-		Hà Nội, ngày 30 tháng 11 năm 2023\\
+		Hà Nội, ngày 4 tháng 12 năm 2023\\
 		Sinh viên\\[2cm]
 		Đoàn Duy Tùng
 	\end{varwidth}
@@ -153,10 +153,10 @@ Kiểm thử các dự án nhúng C/C++ là bài toán nhận được sự quan
 \end{center}
 \changefontsizes[16pt]{12pt}
 \textit{\textbf{Abstract: }} 
-Software development companies and research communities worldwide are focusing on testing embedded C/C++ projects. Early detection of potential errors and improving source code reliability is crucial, and to achieve this, the testing process is often implemented at an early stage, when the source code is not yet complete. Automated testing methods have been widely used to reduce costs, time, and effort in unit testing. Two main approaches in automated software testing are static testing and dynamic testing, with dynamic symbolic testing being proposed as an improvement. However, certain limitations arise during application due to functions lacking definition. To overcome this, a method has been proposed that uses the compiler and source code structure graph to detect and handle functions that lack definition by generating dummy function bodies. Additionally, a method has been proposed to handle method calls, improving the test coverage of units with many interactions between objects. The proposed method has been integrated into the AKAUTAUTO tool and tested on open source code and real source code of the FPT-GAM unit, showcasing high coverage and short processing time. These positive results demonstrate the potential for practical application in unit testing of C/C++ projects during the development process.
+Testing embedded C/C++ projects is a challenge that has drawn the attention of software development companies as well as the research community worldwide. In order to detect hidden errors early and enhance the reliability of the source code, the testing process is often deployed early, when the source code is not yet complete. To reduce costs, time, and effort in unit testing, automated testing methods have been widely applied. Automated software testing comprises two main approaches: static testing and dynamic testing. Inheriting from these two approaches, concolic testing is proposed with various improvements and has achieved certain achievements. However, when applying these approaches, some limitations arise due to the possibility that the source code may contain undefined functions. This thesis proposes a method to automatically detect and handle undefined functions. The main idea for handling undefined functions is to use the compiler and the source code structure graph to search for undefined functions and then generate dummy functions for them. The thesis also proposes a method to handle method calls, helping to increase test coverage for units with multiple interactions between objects. The proposed method has been implemented and integrated into the AKAUTAUTO tool, a collaborative research product between the Software Quality Assurance Laboratory (Faculty of Information Technology, University of Engineering and Technology, VNU) and FPT-GAM (FPT Global Automotive \& Manufacturing) to conduct experiments evaluating the effectiveness of the method. Experimental results show that the method can handle undefined functions in a short time and can generate automatic test data with high coverage on some open-source code and actual source code at FPT-GAM. The positive results of the proposed method demonstrate its potential for practical application in unit testing for parallel C/C++ projects alongside the development process.
 
 \vspace{-0.5cm}
 \begin{flushleft}
-  \textit{\textbf{Keywords: } Automated test data generation, concolic testing, symbolic execution, control flow testing, function prototype, unimplemented function, automated stub, method call}
+  \textit{\textbf{Keywords: } Automated test data generation, concolic testing, control flow testing, function prototype, unimplemented function, automated stub generation, method call}
 \end{flushleft}
 \changefontsizes[16pt]{13pt}

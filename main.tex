@@ -98,14 +98,13 @@
 \usepackage[toc]{appendix}
 \usepackage{subcaption}
 \usepackage{csquotes}
-
 %\counterwithin{figure}{chapter}
 \usepackage[
 defernumbers,
 sortcites,
 backend=biber,
 bibstyle=authoryear,
-sorting=ynt,
+sorting=nyt,
 citestyle=numeric-comp
 ]{biblatex}
 \usepackage{xpatch}
@@ -258,14 +257,19 @@ citestyle=numeric-comp
     let, static, super, switch, throw, try},
   morestring=[b]` % Interpolation strings.
 }
-
+\renewcommand\autoref[1]{%
+	\hyperref[#1]{\ref*{#1}}%
+}
 \renewcommand*{\algorithmcfname}{Thuật toán}
 \renewcommand\lstlistlistingname{Danh sách đoạn mã}
 \renewcommand{\lstlistingname}{Đoạn mã}
+\makeatletter
+\renewcommand\@seccntformat[1]{\csname the#1\endcsname.\quad}
+\makeatother
 % \renewcommand\thechapter{\arabic{chapter}}
-% \renewcommand\thesection{\thechapter.\arabic{section}}
-% \renewcommand\thesubsection{\thesection.\arabic{subsection}}
-% \renewcommand\thesubsubsection{\thesubsection.\arabic{subsubsection}}
+%\renewcommand\thesection{\thechapter.\arabic{section}.}
+%\renewcommand\thesubsection{\thesection\arabic{subsection}.}
+%\renewcommand\thesubsubsection{\thesubsection\arabic{subsubsection}.}
 \renewcommand{\thetable}{\thechapter.\arabic{table}}
 \renewcommand{\thefigure}{\thechapter.\arabic{figure}}
 \renewcommand{\thealgocf}{\thechapter.\arabic{algocf}}
@@ -273,6 +277,15 @@ citestyle=numeric-comp
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \newcolumntype{F}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\let\oldFootnote\footnote
+\newcommand\nextToken\relax
+
+\renewcommand\footnote[1]{%
+	\oldFootnote{#1}\futurelet\nextToken\isFootnote}
+
+\newcommand\isFootnote{%
+	\ifx\footnote\nextToken\textsuperscript{,}\fi}
 
 \begin{document}
 \renewcommand{\thelstlisting}{\thechapter.\arabic{lstlisting}}
@@ -314,22 +327,19 @@ citestyle=numeric-comp
 \changefontsizes[16pt]{13pt}
 \begin{table}[h!]
     \centering
-    %\begin{adjustbox}{width=1\textwidth}
-    \begin{tabularx}{\textwidth}{@{} |p{3cm}|L|L| @{}}
-        \hline
-        \multicolumn{2}{|c|}{\centering\textbf{Thuật ngữ}} & \multirow{2}{*}{\hspace{2.12cm}\textbf{Ý nghĩa}} \\ \cline{1-2}
-        \centering\textbf{Từ viết tắt} & \centering\textbf{Từ đầy đủ} & \\ \hline
-        AST & Abstract Syntax Tree & Cây cú pháp trừu tượng\\ \hline
-        CFG & Control Flow Graph & Đồ thị dòng điều khiển\\ \hline
-        CFT & Control Flow Testing & Kiểm thử dòng điều khiển\\ \hline
-        SE & Symbolic Execution & Thực thi giá trị tượng trưng\\ \hline
-        SMT & Satisfiability Modulo Theories & Lý thuyết mô-đun thỏa mãn\\ \hline
-        \multicolumn{2}{|l|}{Static testing} & Kiểm thử tĩnh \\ \hline
-        \multicolumn{2}{|l|}{Dynamic testing} & Kiểm thử động \\ \hline
-        \multicolumn{2}{|l|}{Concolic testing} & Kiểm thử tượng trưng động \\ \hline
-        \end{tabularx}
-    %\end{adjustbox}
-    \label{table:1}
+\resizebox{\textwidth}{!}{%
+	\begin{tabular}{|ll|l|}
+		\hline
+		\multicolumn{2}{|c|}{\textbf{Thuật ngữ}}                                             & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Ý nghĩa}}} \\ \cline{1-2}
+		\multicolumn{1}{|c|}{\textbf{Từ viết tắt}} & \multicolumn{1}{c|}{\textbf{Từ đẩy đủ}} & \multicolumn{1}{c|}{}                                  \\ \hline
+		\multicolumn{1}{|l|}{AST}                  & Abstract Syntax Tree                    & Cây cú pháp trừu tượng                                 \\ \hline
+		\multicolumn{1}{|l|}{CFG}                  & Control Flow Graph                      & Đồ thị dòng điều khiển                                 \\ \hline
+		\multicolumn{1}{|l|}{LOC}                  & Lines of Code                           & Dòng mã                                                \\ \hline
+		\multicolumn{1}{|l|}{HTML}                 & Hypertext Markup Language               & Ngôn ngữ đánh dấu siêu văn bản                         \\ \hline
+		\multicolumn{1}{|l|}{SMT}                  & Satisfiability Modulo Theories          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
+		\multicolumn{1}{|l|}{}                     & Stub                                    & Giả lập mã nguồn                                       \\ \hline
+	\end{tabular}%
+}
 \end{table}
 
 \mainmatter
@@ -344,7 +354,8 @@ citestyle=numeric-comp
 \include{chapters/4-implementation-and-experiment}
 \include{chapters/5-conclusion}
 
-\chapter{Tài liệu tham khảo}
+\chapter*{Tài liệu tham khảo}
+\addcontentsline{toc}{chapter}{Tài liệu tham khảo}
 \printbibliography[keyword={vietnam}, heading=subbibliography, title={Tiếng Việt}, resetnumbers=true]
 \printbibliography[notkeyword={vietnam}, heading=subbibliography, title=Tiếng Anh]
 \end{document}
