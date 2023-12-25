@@ -9,18 +9,14 @@ Cây cú pháp trừu tượng (Abstract Syntax Tree - AST) là một biểu di�
 
 \textbf{Định nghĩa 2.1}: Đồ thị dòng điều khiển là một đồ thị có hướng gồm các điểm tương ứng với các câu lệnh/nhóm câu lệnh và các cạnh là các dòng điều khiển giữa các câu lệnh/nhóm câu lệnh. Nếu $i$ và $j$ là các điểm của đồ thị dòng điều khiển thì tồn tại một cạnh từ $i$ đến $j$ nếu lệnh tương ứng với $j$ có thể được thực hiện ngay sau lệnh tương ứng với $i$~\cite{GiaoTrinhKiemThu}.
 
-Đồ thị dòng điều khiển bao gồm các thành phần chính là điểm xuất phát, khối xử lý, điểm quyết định, điểm nối và điểm kết thúc. Các thành phần cơ bản trong đồ thị dòng điều khiển được mô tả trong Hình \ref{fig:flow-element}. Các cấu trúc điều khiển cơ bản như tuần tự, rẽ nhánh, switch, vòng lặp while-do và do-while trong ngôn ngữ C/C++ được mô phỏng dưới dạng các thành phần cơ bản của CFG như Hình \ref{fig:flow-structure}.
+Đồ thị dòng điều khiển bao gồm các thành phần chính và các cấu trúc điều khiển phổ biến như trong Hình \ref{fig:flow-structure}. Các thành phần cơ bản gồm điểm xuất phát, khối xử lý, điểm quyết định, điểm nối và điểm kết thúc. Các cấu trúc điều khiển cơ bản như tuần tự, rẽ nhánh, switch, vòng lặp while-do và do-while trong ngôn ngữ C/C++ được mô phỏng dưới dạng các thành phần cơ bản của CFG như Hình \ref{fig:flow-structure}.
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=\linewidth]{images/flow-element.png}
-	\caption{Các thành phần cơ bản trong đồ thị dòng điều khiển \cite{GiaoTrinhKiemThu}.}
-	\label{fig:flow-element}
-\end{figure}
-
-\begin{figure}[h]
+		
 	\centering
 	\includegraphics[width=\linewidth]{images/flow-structure.png}
-	\caption{Các cấu trúc điều khiển phổ biến trong dồ thị dòng điều khiển \cite{GiaoTrinhKiemThu}.}
+	\caption{Các thành phần cơ bản và các cấu trúc điều khiển phổ biến trong CFG \cite{GiaoTrinhKiemThu}.}
 	\label{fig:flow-structure}
 \end{figure}
 
@@ -47,7 +43,7 @@ Như vậy, việc sinh dữ liệu kiểm thử cho một đường thi hành t
 Như đã đề cập ở Chương \nameref{chap1}, kiểm thử tượng trưng động là kĩ thuật kiểm thử áp dụng đồng thời kiểm thử tĩnh và kiểm thử động với ba pha chính là sinh dữ liệu kiểm thử ngẫu nhiên, thực thi ca kiểm thử \& phân tích đường thi hành và sinh dữ liệu kiểm thử có định hướng. Trong pha đầu tiên, một số dữ liệu kiểm thử được sinh ngẫu nhiên. Các dữ liệu kiểm thử sau đó được thực thi trong pha thứ hai. Nhờ việc thực thi các dữ liệu kiểm thử khởi tạo, kiểm thử tượng trưng động xác định được tập các điểm chưa được viếng thăm và
 tìm kiếm đường thi hành từ điểm xuất phát đến điểm đó. Một số nhà nghiên cứu lựa chọn đường thi hành ngắn nhất tới một điểm chưa viếng thăm nhằm tối ưu hóa số lượng ca kiểm thử như SDART~\cite{SDART}. Nếu tìm được đường thi hành chưa được viếng thăm, pha thứ ba chuyển đổi đường thi hành thành các ràng buộc sử dụng kỹ thuật thực thi giá trị tượng trưng~\cite{SymbolicExecutionForSoftwareTestingThreeDecadesLater}. Các ràng buộc được biểu diễn dưới dạng biểu thức logic và được chuyển đổi thành đầu vào của bộ giải hệ ràng buộc. Cuối cùng, bộ giải hệ ràng buộc chịu trách nhiệm giải các ràng buộc và cho ra được một nghiệm - dữ liệu kiểm thử mới. Quá trình sinh dữ liệu kiểm thử sau đó lặp lại từ pha thứ hai cho đến khi tất cả đỉnh trong CFG đã được thăm hoặc chương trình chạy quá thời gian quy định. 
 
-Kỹ thuật kiểm thử tượng trưng động có khả năng đạt độ phủ cao hơn bởi khả năng sinh dữ liệu có hướng dựa trên ràng buộc của đường thi hành. Tập ràng buộc là tập các điều kiện tạo ra bởi tập các kiểm quyết định khi áp dụng kỹ thuật thực thi tượng trưng trên một đường thi hành. Nói cách khác, tập ràng buộc chứa các điều kiện mà dữ liệu đầu vào cần thỏa mãn để ca kiểm thử phủ đường thi hành mong muốn. Dữ liệu đầu vào như vậy được gọi là dữ liệu kiểm thử có hướng. Dữ liệu kiểm thử có hướng cho mỗi đường thi hành có thể thu được bằng cách giải hệ ràng buộc. Trong đó, giải hệ ràng buộc là việc tìm nghiệm cho một tập các ràng buộc, biểu diễn bởi các phép toán điều kiện, sao cho với các giá trị biến đầu vào trong nghiệm thì tất cả các ràng buộc được thỏa mãn~\cite{ref-constraints}. Hiện nay, có nhiều thư viện và công cụ hỗ trợ giải hệ ràng buộc trong đó nổi bật là bộ giải Z3\footnote{https://github.com/Z3Prover/z3}.
+Kỹ thuật kiểm thử tượng trưng động có khả năng đạt độ phủ cao hơn bởi khả năng sinh dữ liệu có hướng dựa trên ràng buộc của đường thi hành. Tập ràng buộc là tập các điều kiện tạo ra bởi tập các điểm quyết định khi áp dụng kỹ thuật thực thi tượng trưng trên một đường thi hành. Nói cách khác, tập ràng buộc chứa các điều kiện mà dữ liệu đầu vào cần thỏa mãn để ca kiểm thử phủ đường thi hành mong muốn. Dữ liệu đầu vào như vậy được gọi là dữ liệu kiểm thử có hướng. Dữ liệu kiểm thử có hướng cho mỗi đường thi hành có thể thu được bằng cách giải hệ ràng buộc. Trong đó, giải hệ ràng buộc là việc tìm nghiệm cho một tập các ràng buộc, biểu diễn bởi các phép toán điều kiện, sao cho với các giá trị biến đầu vào trong nghiệm thì tất cả các ràng buộc được thỏa mãn~\cite{ref-constraints}. Hiện nay, có nhiều thư viện và công cụ hỗ trợ giải hệ ràng buộc trong đó nổi bật là bộ giải Z3\footnote{https://github.com/Z3Prover/z3}.
 
 Bộ giải Z3 là một công cụ được phát triển bởi Nhóm Nghiên cứu về Kỹ thuật Phần mềm (RiSE) tại Microsoft Research. Được xây dựng chủ yếu bằng ngôn ngữ C++, Z3 hỗ trợ giải hệ ràng buộc của nhiều loại dữ liệu như số nguyên, số thực, mảng, hàm tượng trưng, vectơ bit, và các biểu thức số học khác nhau. Z3 được thiết kế để hỗ trợ định dạng SMT-LIB\footnote{http://smtlib.github.io/jSMTLIB/SMTLIBTutorial.pdf}, một định dạng tiêu chuẩn sử dụng để giải quyết các vấn đề liên quan đến giải ràng buộc. Để sử dụng bộ giải, hệ ràng buộc cần được biểu diễn dưới định dạng SMT-LIB và lưu trữ trong tệp *.smt2. Cấu trúc của tệp này bao gồm ba phần chính: phần khai báo, phần định nghĩa ràng buộc và phần tiện ích. Phần khai báo đầu tiên trong tệp là nơi các biến trong hệ ràng buộc được khai báo theo cú pháp SMT-LIB. Sau đó, các ràng buộc được thêm vào bằng cách sử dụng lệnh assert. Cuối cùng, phần tiện ích cung cấp các cú pháp sẵn có để người dùng thực hiện các thao tác như đặt thời gian giải quyết tối đa, xác định mô hình giải ràng buộc, và nhiều tính năng khác.
 
@@ -76,14 +72,14 @@ Hàm ảo là một cơ chế mới được giới thiệu trong ngôn ngữ C+
 Để có được khả năng đa hình, ngôn ngữ C++ giới thiệu một khái niệm mới có tên là bảng ký hiệu ảo (Vtable). Vtable là bảng lưu trữ các khai báo biến, hàm có trong một kiểu dữ liệu tự định nghĩa do trình biên dịch tạo ra khi biên dịch một tệp mã nguồn. Vtable là công cụ giúp trình biên dịch biết một biến đã được định nghĩa hay chưa, biến đó thuộc kiểu gì, từ đó thông báo đến người dùng nếu có lỗi ngữ pháp. Vtable còn là công cụ giúp chương trình xác định được hàm nào sẽ được thực thi bằng cách sử dụng cơ chế liên kết động. Nếu hàm ảo, thuần ảo thiếu định nghĩa hàm thì khi liên kết, trình biên dịch sẽ báo lỗi do không biết chương trình sẽ cần hàm nào để chạy. Khác với các nguyên mẫu hàm cơ bản, trình biên dịch không hiển thị lỗi hàm thiếu định nghĩa nếu không tìm thấy định nghĩa của hàm ảo mà sẽ hiển thị lỗi thiếu bảng ký hiệu ảo. Nguyên nhân gây ra lỗi này là bởi trình biên dịch không cho phép gọi hàm ảo nếu nó không có ít nhất một hàm ghi đè.\\
 
 \begin{lstlisting}[language=C++, captionpos=b, caption={Ví dụ về lỗi thiếu bảng ký hiệu ảo.}, label={cod:kno-vtable}]
-	class A {
-		virtual int echo() {}
-		virtual int foo();
-		virtual int bar();
-	};
-	class B : public A {
-		int bar() {}
-	}
+class A {
+	virtual int echo() {}
+	virtual int foo(); // Trigger the undefined reference to vtable error
+	virtual int bar();
+};
+class B : public A {
+	int bar() {}
+}
 \end{lstlisting}
 
 Để làm rõ hơn ví dụ về lỗi thiếu bảng ký hiệu ảo, ta xét ví dụ trong Đoạn mã~\ref{cod:kno-vtable}. Đoạn mã này chứa hai lớp \tcode{A} và \tcode{B} trong đó \tcode{B} là lớp dẫn xuất của \tcode{A}. Lớp \tcode{A} có chứa ba nguyên mẫu hàm ảo, trong đó hàm~\tcode{bar} được ghi đè ở lớp dẫn xuât và hàm~\tcode{echo} là khai báo hàm ảo đầy đủ. Trong quá trình liên kết để tạo thành tệp thực thi, trình biên dịch báo lỗi thiếu Vtable cho kiểu \tcode{A} bởi trình biên dịch không thể tìm thấy hàm ghi đè nguyên mẫu hàm ảo \tcode{foo} ở lớp dẫn xuất.
