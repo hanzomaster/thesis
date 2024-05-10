@@ -53,11 +53,12 @@
 \usepackage[justification=centering]{caption}
 %\usepackage{babel}
 \usepackage[utf8]{vietnam}
+\usepackage[vietnamese=nohyphenation]{hyphsubst}
 %\usepackage{times}
 %\usepackage{graphicx}
 
 \usepackage{mathptmx}	% same Time New Roma
-
+\usepackage{dirtytalk}
 \usepackage{indentfirst}
 
 %\renewcommand{\rmdefault}{phv} % Arial
@@ -189,10 +190,10 @@ citestyle=numeric-comp
 
 \hypersetup{
 	bookmarks=true,
-	pdftitle={RESEARCH ON AN AUTOMATED UNIT TESTING SOLUTION FOR C/C++ SOURCE CODE CONTAINING MISSING FUNCTION DEFINITIONS},
-	pdfauthor={Đoàn Duy Tùng}, % author
-	pdfsubject={TeX and LaTeX},
-	pdfkeywords={TeX, LaTeX, graphics, images}, % list of keywords
+	pdftitle={DEVELOP A MANAGEMENT SYSTEM FOR SMALL AND MEDIUM-SIZED EATERIES},
+	pdfauthor={Trần Tuấn Thịnh}, % author
+	pdfsubject={centralized platform},
+	pdfkeywords={TeX, LaTeX, graphics, images, thesis, restaurants}, % list of keywords
 	colorlinks=false,       % false: boxed links; true: colored links
 	linkcolor=black,       % color of internal links
 	citecolor=black,       % color of links to bibliography
@@ -293,7 +294,7 @@ citestyle=numeric-comp
 \pagestyle{plain}
 \frontmatter
 
-\input{chapters/0-coverpage}
+\input{chapters/coverpage}
 
 \changefontsizes[16pt]{13pt}
 % \input{chapters/0.2.start}
@@ -332,26 +333,29 @@ citestyle=numeric-comp
 		\hline
 		\multicolumn{2}{|c|}{\textbf{Thuật ngữ}}                                             & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Ý nghĩa}}} \\ \cline{1-2}
 		\multicolumn{1}{|c|}{\textbf{Từ viết tắt}} & \multicolumn{1}{c|}{\textbf{Từ đầy đủ}} & \multicolumn{1}{c|}{}                                  \\ \hline
-		\multicolumn{1}{|l|}{AST}                  & Abstract Syntax Tree                    & Cây cú pháp trừu tượng                                 \\ \hline
-		\multicolumn{1}{|l|}{CFG}                  & Control Flow Graph                      & Đồ thị dòng điều khiển                                 \\ \hline
-		\multicolumn{1}{|l|}{LOC}                  & Lines of Code                           & Dòng mã                                                \\ \hline
-		\multicolumn{1}{|l|}{HTML}                 & Hypertext Markup Language               & Ngôn ngữ đánh dấu siêu văn bản                         \\ \hline
-		\multicolumn{1}{|l|}{SMT}                  & Satisfiability Modulo Theories          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
-		\multicolumn{1}{|l|}{}                     & Stub                                    & Giả lập mã nguồn                                       \\ \hline
+		\multicolumn{1}{|l|}{K8s}                  & Kubernetes                    & Cây cú pháp trừu tượng                                 \\ \hline
+		\multicolumn{1}{|l|}{CSP}                  & Cloud Service Provider                      & Đồ thị dòng điều khiển                                 \\ \hline
+		\multicolumn{1}{|l|}{GCP}                  & Google Cloud Platform                           & Dòng mã                                                \\ \hline
+		\multicolumn{1}{|l|}{GKE}                 & Google Kubernetes Engine                & Ngôn ngữ đánh dấu siêu văn bản                         \\ \hline
+		\multicolumn{1}{|l|}{HTML}                  & Hypertext Markup Language          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
+		\multicolumn{1}{|l|}{JSX}                  & JavaScript XML          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
+		\multicolumn{1}{|l|}{GLSB}                  & Global Server Load Balancers          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
+		\multicolumn{1}{|l|}{}                  & Microservice          & kiến trúc vi dịch vụ                              \\ \hline
+		\multicolumn{1}{|l|}{}                  & Message Queue          & hàng đợi tin nhắn                              \\ \hline
+		\multicolumn{1}{|l|}{}                  & API Gateway          & Cổng API                              \\ \hline
+		\multicolumn{1}{|l|}{}                     & Request                                    & yêu cầu                                       \\ \hline
 	\end{tabular}%
 }
 \end{table}
-
 \mainmatter
-
-
 
 \changefontsizes[16pt]{13pt}
 \pagestyle{plain}
-\include{chapters/1-introduction}
-\include{chapters/2-base-knowledge}
-\include{chapters/3-proposed-solution}
-\include{chapters/4-implementation-and-experiment}
+\include{chapters/0-base-knowledge}
+\include{chapters/1-system-introduction}
+\include{chapters/2-system-design}
+\include{chapters/3-implementation}
+\include{chapters/4-system-evaluation}
 \include{chapters/5-conclusion}
 
 \chapter*{Tài liệu tham khảo}
