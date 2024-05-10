@@ -1,8 +1,24 @@
 \chapter{Triển khai hệ thống}\label{chap3}
+Ở Chương~\nameref{chap2} khóa luận đã đề cập đến một số công nghệ được sử dụng trong quá trình thiết kế như Kubernetes, RabbitMQ, MongoDB, v.v..
+Mỗi công nghệ được lựa chọn và sử dụng trong quá trình phát triển hệ thống đều đóng một vai trò quan trọng giúp đảm bảo luồng nghiệp vụ phía người dùng diễn ra một cách mượt mà và toàn vẹn.
+Chương này sẽ đi chi tiết hơn vào diễn giải cách các công nghệ này tương tác, hoạt động với nhau, lợi ích của từng công nghệ cụ thể.
+Tiếp sau đó, Mục~\nameref{sec:deploy-environment} sẽ trình bày cách triển khai hệ thống quản lý quán ăn lên môi trường đám mây của Google Cloud quá trình cài đặt HPA giúp hệ thống tự động mở rộng (autoscale) khi có lưu lượng truy cập lớn.
 \section{Công nghệ sử dụng} \label{sec:tehcnologies-used}
-Ở Chương~\nameref{chap2} đề cập đến một số công nghệ được sử dụng trong quá trình thiết kế hệ thống như kubernetes, RabbitMQ, v.v., mỗi công nghệ được lựa chọn và sử dụng trong hệ thống đều đóng một vai trò quan trọng giúp thực hiện luồng nghiệp vụ phía người dùng một cách mượt mà và toàn vẹn.
-Các công nghệ này sẽ được chia thành 
-\section{Môi trường triển khai}\label{sec:deploy-environment}
+\subsection{Kubernetes (K8s)}
+Đối với mô hình quản lý quán ăn tập trung, việc đảm bảo khả năng chịu lỗi và tính sẵn sàng cao khi các quán ăn sử dụng hệ thống là điều thiết yếu.
+Đặc biệt trong giờ cao điểm khi các nhà hàng, quán ăn đón một lượng lớn khách hàng đến.
+Từ đó khóa luận này đưa ra phương án triển khai hệ thống với mô hình vi dịch vụ (microservice) với K8s giúp tối ưu hóa chi phí vận hành và đảm bảo tính sẵn sàng cao của hệ thống.
+
+Các lợi ích chính của K8s có thể kể đến như là tự động hóa quá trình triển khai, mở rộng và quản lý các ứng dụng đóng gói (containerized)
+Các ứng dụng đóng gói ở đây có thể hiểu như là từng dịch vụ riêng lẻ đảm nhiệm cho từng chức năng trong hệ thống trong mô hình vi dịch vụ (microservice).
+Đơn vị triển khai cơ bản trong K8s được gọi là Pod.
+Mỗi Pod có thể bao gồm một hoặc nhiều container
+
+Tuy nhiên trong quá trình phát triển hệ thống, mã nguồn của chương trình liên tục trải qua thay đổi 
+\subsection{RabbitMQ}
+\subsection{MongoDB}
+\subsection{Kong}
+\section{Quy trình triển khai}\label{sec:deploy-environment}
 Nhằm đánh giá tính hiệu quả của phương pháp đề xuất, khóa luận đã cài đặt một số mô-đun và tích hợp phương pháp đề xuất trên công cụ AKAUTAUTO và thực hiện thực nghiệm trên công cụ này. AKAUTAUTO là một công cụ kiểm thử tự động cho mã nguồn C/C++, được nghiên cứu và phát triển bởi Phòng thí nghiệm Đảm bảo chất lượng phần mềm (Khoa Công nghệ thông tin, Trường Đại học Công nghệ, ĐHQGHN) và đơn vị FPT-GAM (FPT Global Automative \& Manufacturing). Khóa luận kế thừa kiến trúc của công cụ AKAUTAUTO phiên bản 5.9.2, phiên bản tích hợp sẵn phương pháp kiểm thử tượng trưng động và phương pháp sinh giả lập mã nguồn tự động AS4UT, và bổ sung, cải tiến một số mô-đun trong kiến trúc gốc để tích hợp phương pháp đề xuất (phiên bản 5.9.2-thesis).
 
 % \subsection{Tổng quan kiến trúc công cụ AKAUTAUTO}

@@ -1,6 +1,5 @@
 \chapter{Thiết kế hệ thống}\label{chap2}
 \section{Kiến trúc hệ thống}
-% \subsection{Cây cú pháp trừu tượng và đồ thị dòng điều khiển} \label{sec:kno-ast-and-cfg}
 Nền tảng hạ tầng của hệ thống được thiết kế giúp hướng đến tính ổn định cao và phát triển cho sau này.
 Khi hệ thống đạt một số lượng người dùng nhất định, và có thể những người dùng này trải dài khắp nơi thay vì tập trung chủ yếu tại một địa điểm cố định.
 Khi đó, việc duy trì một máy chủ vật lý sẽ không còn là lựa chọn tối ưu do sự tốn kém về nhân lực cũng như chi phí phát sinh trong việc bảo trì và nâng cấp cho máy chủ.
@@ -38,11 +37,10 @@ Mỗi vi dịch vụ microservice có trách nhiệm thực hiện một chức 
 Việc chia nhỏ hệ thống thành các dịch vụ độc lập mang lại nhiều lợi ích như giúp dễ dàng triển khai và bảo trì cho hệ thống, tăng tính sẵn sàng cũng như là khả năng chịu lỗi, giúp tự động mở rộng hệ thống.
 Về mặt phát triển hệ thống, bởi vì mỗi vi dịch vụ đều hoàn toàn độc lập với nhau nên các đội ngũ phát triển của từng chức năng có thể chọn bộ công nghệ phù hợp nhất với nhu cầu và khả năng của đội.
 
-Nền tảng quản lý quán ăn trên hình \ref{fig:overall-architecture} được triển khai nền tảng Kubernetes (K8s) và Google Cloud Platform (GCP) mang đến nhiều lợi ích cho việc vận hành và quản lý ứng dụng.
-K8s là một nền tảng mã nguồn mở giúp tự động hóa việc triển khai, quản lý và mở rộng các ứng dụng đóng gói\footnote{https://kubernetes.io/docs/concepts/overview/}.
-Sử dụng K8s cho hệ thống vi dịch vụ (microservice) giúp giảm tải đáng kể công sức triển khai từng dịch vụ độc lập một cũng như mở rộng, quản lý các dịch vụ này do K8s có thể được cấu hình để tự động hóa các tác vụ thủ công như tạo và quản lý các Docker container, tự động phục hồi và xử lý lỗi.
-Các ưu điểm công nghệ của K8s sẽ được đề cập rõ hơn trong Chương \textcolor{red}{Trích dẫn đến phần chi tiết triển khai hệ thống khi cấu hình K8s cho từng pod}
-GCP cung cấp một nền tảng đám mây với gói chức năng đa dạng kèm theo các công cụ hỗ trợ tốt cho hệ thống với kiến trúc vi dịch vụ (microservice) giúp dễ dàng triển khai và vận hành.
+Bằng việc triển khai nền tảng quản lý quán ăn trên Kubernetes (K8s) và Google Cloud Platform (GCP), nhà phát triển sẽ tránh được việc phải cấu hình thủ công cho từng dịch vụ K8s và giảm tải cho quản trị viên hệ thống trong quá trình vận hành và quản lý ứng dụng.
+Các ưu điểm công nghệ của K8s sẽ được đề cập rõ hơn trong Mục~\nameref{sec:tehcnologies-used}
+
+Hệ thống cũng sử dụng GCP, một nền tảng dịch vụ điện toán đám mây với gói chức năng đa dạng kèm theo các công cụ hỗ trợ tốt cho hệ thống với kiến trúc vi dịch vụ (microservice) giúp dễ dàng triển khai và vận hành.
 Có thể kể đến nền tảng GKE giúp người dùng cấu hình K8s trên GCP một cách dễ dàng, Firebase giúp bảo mật hệ thống, xác thực người dùng truy cập vào hệ thống thông qua việc tạo lập và quản lý tài khoản cả người dùng.
 GCP cũng hỗ trợ người sử dụng tránh được các vấn đề liên quan đến cấu hình cơ sở hạ tầng của hệ thống.
 Với các tùy chọn đa dạng, người dùng có thể dựa theo nhu cầu thực tế của hệ thống tại từng thời điểm và chọn cấu hình phù hợp.

@@ -329,11 +329,12 @@ citestyle=numeric-comp
 \begin{table}[h!]
     \centering
 \resizebox{\textwidth}{!}{%
-	\begin{tabular}{|ll|l|}
+	\begin{tabular}{|ll|p{0.5\linewidth}|}
 		\hline
 		\multicolumn{2}{|c|}{\textbf{Thuật ngữ}}                                             & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Ý nghĩa}}} \\ \cline{1-2}
 		\multicolumn{1}{|c|}{\textbf{Từ viết tắt}} & \multicolumn{1}{c|}{\textbf{Từ đầy đủ}} & \multicolumn{1}{c|}{}                                  \\ \hline
 		\multicolumn{1}{|l|}{K8s}                  & Kubernetes                    & Cây cú pháp trừu tượng                                 \\ \hline
+  		\multicolumn{1}{|l|}{HPA}                  & Horizontal Pod Autoscale                    & Tự động mở rộng Pod theo chiều ngang                                 \\ \hline
 		\multicolumn{1}{|l|}{CSP}                  & Cloud Service Provider                      & Đồ thị dòng điều khiển                                 \\ \hline
 		\multicolumn{1}{|l|}{GCP}                  & Google Cloud Platform                           & Dòng mã                                                \\ \hline
 		\multicolumn{1}{|l|}{GKE}                 & Google Kubernetes Engine                & Ngôn ngữ đánh dấu siêu văn bản                         \\ \hline
@@ -344,7 +345,8 @@ citestyle=numeric-comp
 		\multicolumn{1}{|l|}{}                  & Message Queue          & hàng đợi tin nhắn                              \\ \hline
 		\multicolumn{1}{|l|}{}                  & API Gateway          & Cổng API                              \\ \hline
 		\multicolumn{1}{|l|}{}                     & Request                                    & yêu cầu                                       \\ \hline
-	\end{tabular}%
+  		\multicolumn{1}{|l|}{}                     & container                                    & Tương trưng cho một máy ảo (VM), mỗi container đều có CPU, cây thư mục hệ thống, không gian xử lý, bộ nhớ, v.v.                                        \\ \hline
+	\end{tabular}
 }
 \end{table}
 \mainmatter
