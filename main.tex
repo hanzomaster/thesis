@@ -69,11 +69,13 @@
 % \usepackage[utf8]{inputenc}
 \usepackage[vietnamese, english]{babel}
 \usepackage{titlesec}
+\usepackage{placeins}
 \usepackage{titletoc}
 \usepackage{listings}
 \usepackage[bookmarks=true]{hyperref}
 \usepackage[left=3cm,right=2cm,top=2.5cm,bottom=3cm]{geometry}
 \usepackage{graphicx}
+\usepackage{pdfpages}
 \usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{varwidth}
@@ -109,6 +111,16 @@ sorting=nyt,
 citestyle=numeric-comp
 ]{biblatex}
 \usepackage{xpatch}
+
+\lstdefinestyle{yaml}{
+     basicstyle=\color{blue}\footnotesize,
+     rulecolor=\color{black},
+     string=[s]{'}{'},
+     stringstyle=\color{blue},
+     comment=[l]{:},
+     commentstyle=\color{black},
+     morecomment=[l]{-}
+ }
 
 \makeatletter
 \input{numeric.bbx}
@@ -312,9 +324,6 @@ citestyle=numeric-comp
 \listoftables
 \addcontentsline{toc}{chapter}{\listtablename}
 
-\listofalgorithms
-\addcontentsline{toc}{chapter}{\listalgorithmcfname}
-
 \lstlistoflistings
 \addcontentsline{toc}{chapter}{\lstlistlistingname}
 
@@ -331,21 +340,24 @@ citestyle=numeric-comp
 \resizebox{\textwidth}{!}{%
 	\begin{tabular}{|ll|p{0.5\linewidth}|}
 		\hline
-		\multicolumn{2}{|c|}{\textbf{Thuật ngữ}}                                             & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Ý nghĩa}}} \\ \cline{1-2}
-		\multicolumn{1}{|c|}{\textbf{Từ viết tắt}} & \multicolumn{1}{c|}{\textbf{Từ đầy đủ}} & \multicolumn{1}{c|}{}                                  \\ \hline
+		\multicolumn{2}{|c|}{\textbf{Thuật ngữ}}                                             & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Ý nghĩa tiếng Việt}}} \\ \cline{1-2}
+		\multicolumn{1}{|c|}{\textbf{Từ viết tắt}} & \multicolumn{1}{c|}{\textbf{Từ đầy đủ tiếng Anh}} & \multicolumn{1}{c|}{}                                  \\ \hline
 		\multicolumn{1}{|l|}{K8s}                  & Kubernetes                    & Cây cú pháp trừu tượng                                 \\ \hline
   		\multicolumn{1}{|l|}{HPA}                  & Horizontal Pod Autoscale                    & Tự động mở rộng Pod theo chiều ngang                                 \\ \hline
+      		\multicolumn{1}{|l|}{HA}                  & High Availability                     & Tính sẵn sàng cao                                 \\ \hline
 		\multicolumn{1}{|l|}{CSP}                  & Cloud Service Provider                      & Đồ thị dòng điều khiển                                 \\ \hline
 		\multicolumn{1}{|l|}{GCP}                  & Google Cloud Platform                           & Dòng mã                                                \\ \hline
 		\multicolumn{1}{|l|}{GKE}                 & Google Kubernetes Engine                & Ngôn ngữ đánh dấu siêu văn bản                         \\ \hline
 		\multicolumn{1}{|l|}{HTML}                  & Hypertext Markup Language          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
 		\multicolumn{1}{|l|}{JSX}                  & JavaScript XML          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
 		\multicolumn{1}{|l|}{GLSB}                  & Global Server Load Balancers          & Lý thuyết mô-đun thỏa mãn                              \\ \hline
+  		\multicolumn{1}{|l|}{API}                  & Application Programming Interface          & GIao diện lập trình ứng dụng                              \\ \hline
 		\multicolumn{1}{|l|}{}                  & Microservice          & kiến trúc vi dịch vụ                              \\ \hline
 		\multicolumn{1}{|l|}{}                  & Message Queue          & hàng đợi tin nhắn                              \\ \hline
 		\multicolumn{1}{|l|}{}                  & API Gateway          & Cổng API                              \\ \hline
 		\multicolumn{1}{|l|}{}                     & Request                                    & yêu cầu                                       \\ \hline
-  		\multicolumn{1}{|l|}{}                     & container                                    & Tương trưng cho một máy ảo (VM), mỗi container đều có CPU, cây thư mục hệ thống, không gian xử lý, bộ nhớ, v.v.                                        \\ \hline
+  		\multicolumn{1}{|l|}{}                     & Autoscale                                    & Tự động mở rộng                                       \\ \hline
+  		\multicolumn{1}{|l|}{}                     & Container                                    & Tương trưng cho một máy ảo (VM), mỗi container đều có CPU, cây thư mục hệ thống, không gian xử lý, bộ nhớ, v.v.                                        \\ \hline
 	\end{tabular}
 }
 \end{table}

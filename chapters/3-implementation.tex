@@ -1,248 +1,268 @@
 \chapter{Triển khai hệ thống}\label{chap3}
-Ở Chương~\nameref{chap2} khóa luận đã đề cập đến một số công nghệ được sử dụng trong quá trình thiết kế như Kubernetes, RabbitMQ, MongoDB, v.v..
+Ở Chương~\nameref{chap2} khóa luận đã đề cập đến một số công nghệ được sử dụng trong quá trình thiết kế như Kubernetes, RabbitMQ, MongoDB, v.v.
 Mỗi công nghệ được lựa chọn và sử dụng trong quá trình phát triển hệ thống đều đóng một vai trò quan trọng giúp đảm bảo luồng nghiệp vụ phía người dùng diễn ra một cách mượt mà và toàn vẹn.
 Chương này sẽ đi chi tiết hơn vào diễn giải cách các công nghệ này tương tác, hoạt động với nhau, lợi ích của từng công nghệ cụ thể.
 Tiếp sau đó, Mục~\nameref{sec:deploy-environment} sẽ trình bày cách triển khai hệ thống quản lý quán ăn lên môi trường đám mây của Google Cloud quá trình cài đặt HPA giúp hệ thống tự động mở rộng (autoscale) khi có lưu lượng truy cập lớn.
 \section{Công nghệ sử dụng} \label{sec:tehcnologies-used}
 \subsection{Kubernetes (K8s)}
 Đối với mô hình quản lý quán ăn tập trung, việc đảm bảo khả năng chịu lỗi và tính sẵn sàng cao khi các quán ăn sử dụng hệ thống là điều thiết yếu.
-Đặc biệt trong giờ cao điểm khi các nhà hàng, quán ăn đón một lượng lớn khách hàng đến.
-Từ đó khóa luận này đưa ra phương án triển khai hệ thống với mô hình vi dịch vụ (microservice) với K8s giúp tối ưu hóa chi phí vận hành và đảm bảo tính sẵn sàng cao của hệ thống.
+Điều này đặc biệt đúng trong giờ cao điểm khi các nhà hàng, quán ăn đón một lượng lớn khách hàng đến quán.
+Từ đó khóa luận này đưa ra phương án thiết kế hệ thống đi theo mô hình hệ thống phân tán (distributed system) với kiến trúc vi dịch vụ sử dụng K8s nhằm đạt được những yêu cầu đề ra và hơn thế nữa.
 
-Các lợi ích chính của K8s có thể kể đến như là tự động hóa quá trình triển khai, mở rộng và quản lý các ứng dụng đóng gói (containerized)
-Các ứng dụng đóng gói ở đây có thể hiểu như là từng dịch vụ riêng lẻ đảm nhiệm cho từng chức năng trong hệ thống trong mô hình vi dịch vụ (microservice).
-Đơn vị triển khai cơ bản trong K8s được gọi là Pod.
-Mỗi Pod có thể bao gồm một hoặc nhiều container
+Khi sử dụng mô hình phân tán, hệ thống sẽ tránh được việc có một điểm lỗi duy nhất (single point of failure), khi một dịch vụ ngừng hoạt động, chỉ có riêng phần chức năng đó của hệ thống dừng phản hồi trong thời gian quản trị viên sửa chữa dịch vụ lỗi.
+Về phía khách hàng cũng như là quán ăn, trải nghiệm sử dụng của họ trên toàn bộ hệ thống sẽ dường như không thay đổi và đây là một ưu điểm lớn trong mô hình phân tán.
+Ngoài ra các hệ thống/dịch vụ độc lập với nhau thuộc hệ phân tán còn mang lại lợi ích cho khả năng mở rộng, phát triển nhờ sự tách biệt về mặt công nghệ.
+Các đội ngũ kỹ thuật hoàn toàn có thể phát triển hệ thống/dịch vụ của đội mà không gây ảnh hưởng đến các đội khác.
+Một ví dụ cho lợi ích này đó là dịch vụ thông báo.
+Như đã nói đề cập ở Mục~\nameref{sec:system-architecture}, dịch vụ thông báo sẽ đóng vai trò giao tiếp với mọi dịch vụ khác trong hệ thống mỗi khi có một đơn đặt bàn mới, một lời gọi món mới, v.v.
+Khi vào giờ cao điểm, dịch vụ thông báo sẽ cần phải điều phối lượng thông tin của mọi dịch vụ khác gửi đến và có thể gây ra hiện tượng tắc nghẽn cho toàn bộ hệ thống nếu không mở rộng dịch vụ này.
+Nếu hệ thống được triển khai theo mô hình kiến trúc một khối (monolithic), việc nâng cấp chỉ riêng tính năng thông báo sẽ đồng nghĩa với việc phải nâng cấp cho toàn bộ máy chủ của toàn bộ tất cả các dịch vụ khác.
+Quá trình này không những khó khăn và tốn kém hơn mà còn khiến cho toàn bộ hệ thống chịu ảnh hưởng từ một dịch vụ.
+Bằng cách triển khai dịch vụ thông báo trên một máy chủ độc lập, ta sẽ loại bỏ được những phiền toái ban đầu liên quan đến phát triển, nâng cấp cũng như là bảo trì, sửa chữa.
 
-Tuy nhiên trong quá trình phát triển hệ thống, mã nguồn của chương trình liên tục trải qua thay đổi 
+Một trong những kiến trúc phổ biến nhất của mô hình hệ thống phân tán đó là kiến trúc vi dịch vụ.
+Các lợi ích chính của K8s có thể kể đến như là tự động hóa quá trình triển khai, mở rộng và quản lý các ứng dụng đóng gói (containerized).
+Các ứng dụng đóng gói trong ngữ cảnh này là từng dịch vụ riêng lẻ đảm nhiệm cho từng chức năng chính trong hệ thống kiến trúc vi dịch vụ.
+Trong quá trình phát triển phần mềm, mã nguồn luôn thay đổi và cập nhật liên tục để đáp ứng nhu cầu mới và sửa lỗi.
+Việc triển khai thủ công các phiên bản mới có thể tốn thời gian và dễ xảy ra sai sót.
+Vì vậy, việc sử dụng quy trình tự động triển khai của Kubernetes (K8s) là một giải pháp hợp lý.
+
+Trong Kubernetes, việc triển khai ứng dụng được thực hiện trên một cụm (cluster), là một tập hợp các máy chủ (node) làm việc cùng nhau để cung cấp tài nguyên tính toán và lưu trữ~\footnote{https://kubernetes.io/docs/concepts/overview/components/}.
+Đơn vị triển khai cơ bản của K8s là Pod, thông thường bên trong một Pod sẽ chỉ có duy nhất một container~\footnote{https://kubernetes.io/docs/reference/glossary/?fundamental=true\#term-container} chính nhưng Pod cũng được thiết kế cho nhiều container với liên kết chặt chẽ với nhau để thực hiện một chức năng cụ thể~\footnote{https://kubernetes.io/docs/reference/glossary/?fundamental=true\#term-pod}.
+Các Pod được quản lý bởi Deployment, chịu trách nhiệm duy trì số lượng pod mong muốn và đảm bảo chúng luôn hoạt động.
+Deployment được nhắc đến ở đây như một khái niệm trừu tượng, trên thực tế các Deployment không trực tiếp chạy trên bất kỳ máy chủ vật lý nào.
+Chúng hoạt động như một bản thiết kế, mô tả trạng thái mong muốn của ứng dụng, bao gồm số lượng bản sao pod, phiên bản image và các cấu hình khác.
+
+Các Pod được triển khai trên Worker Node, là các máy chủ vật lý trong cluster K8s.
+Worker Node cung cấp tài nguyên tính toán và lưu trữ cho các Pod hoạt động.
+Ngoài ra ta cũng có Master Node chịu trách nhiệm quản lý toàn bộ cluster, bao gồm việc lên lịch triển khai Pod, giám sát trạng thái Pod và đảm bảo tính sẵn sàng của hệ thống.
+Trong một cụm hoàn toàn có thể có Master Node, tuy nhiên các Master Node sẽ tiến hành bầu cử để chọn ra một Master Node chính chịu trách nhiệm quản lý cụm và các Master Node còn lại sẽ đóng vai trò như bản sao của Node chính này.
+Quá trình bầu cử này dựa vào thuật toán đồng thuận phân tán như Raft\footnote{Để giúp hiểu thêm về thuật toán đồng thuận phân tán, tham khảo trang http://thesecretlivesofdata.com/raft/} giúp đảm bảo tính công bằng, nhất quán và độ tin cậy của hệ thống.
+
+Bên trong một cụm (cluster) K8s, các Pod sẽ giao tiếp với nhau bằng mạng nội bộ.
+Như trên Hình~\ref{fig:k8s-cluster-network}, các Nodes tức các Worker Node và bên trong đó chứa các Pod/ứng dụng.
+Các Pod này được quản lý bởi các Service nằm trong cụm K8s đó.
+Mỗi Pod trong mạng sẽ được gán một địa chỉ IP (Internet Protocol) ảo và port (cổng) độc nhất trong mạng nội bộ bởi Service.
+Service hoạt động như một bộ cân bằng tải nội bộ và giúp quản lý các Pod trong hệ thống.
+Khi có yêu cầu đến Service, tùy thuộc vào cấu hình cân bằng tải, Master Node sẽ chỉ định một trong các Pod có trong Service xử lý yêu cầu đó.
+
+Trước khi các yêu cầu từ bên ngoài đến được tới Service, K8s sử dụng Ingress để phân loại và điều hướng đến các Service phù hợp.
+Ingress hoạt động như Controller (bộ điều khiển) ở tầng ứng dụng, tiếp nhận các yêu cầu từ ngoài Internet và dựa theo cấu hình được định nghĩa trước để chuyển hướng các yêu cầu đó tới các Service phù hợp.
+Như trong Hình~\ref{fig:k8s-ingress} mô tả cách client gọi đến Ingress từ ngoài Internet sau đó được điều hướng về các Service dựa theo HTTP Header \tcode{Host} được truyền vào.
+Bản thân Ingress cũng có thể đóng vai trò như một bộ cân bằng tải nhưng trong hệ thống khóa luận này phát triển sẽ không dùng tới nó.
+Chi tiết về việc triển khai và các cấu hình của K8s trên hệ thống quản lý quán ăn sẽ được trình bày ở Mục~\nameref{sec:deploy-environment}.
+\begin{figure}[H]
+	\centering
+	\includesvg[width=\textwidth]{images/hChip/K8s/kubernetes-cluster-network.svg}
+	\caption{Các dải mạng khác nhau trong một cụm Kubernetes~\protect\footnotemark}
+	\label{fig:k8s-cluster-network}
+\end{figure}
+\footnotetext{https://kubernetes.io/docs/concepts/cluster-administration/networking/\#kubernetes-ip-address-ranges}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{images/hChip/K8s/ingress-flow.png}
+	\caption{Hình minh họa phân bố yêu cầu gọi đến các Service trong cụm ~\protect\footnotemark}
+	\label{fig:k8s-ingress}
+\end{figure}
+\footnotetext{https://kubernetes.io/docs/concepts/services-networking/ingress/\#name-based-virtual-hosting}
+\newpage
 \subsection{RabbitMQ}
+Đối với một hệ thống phân tán nói chung mà kiến trúc vi dịch vụ nói riêng, việc giao tiếp giữa các dịch vụ với nhau đóng vai trò then chốt.
+Khác với các ứng dụng theo kiến trúc một khối (monolithic) truyền thống khi mà các thành phần giao tiếp với nhau thông qua các lời gọi hàm hoặc chia sẻ bộ nhớ, các ứng dụng theo kiến trúc vi dịch vụ giao tiếp với nhau qua hai hình thức chính:
+\begin{itemize}
+    \item Giao tiếp đồng bộ (Synchronous communication) là khi các dịch vụ gửi yêu cầu đến các dịch vụ đích và chờ phản hồi từ đó trước khi tiếp tục thực hiện tác vụ tiếp theo. Các giao thức phổ biến cho giao tiếp đồng bộ bao gồm RESTful API và gRPC.
+    \item Giao tiếp bất đồng bộ (Asynchronous communication) khác với giao tiếp đồng bộ ở điểm dịch vụ gửi yêu cầu không cần chờ phản hồi ngay lập tức từ các dịch vụ đích.
+    Điều này cho phép dịch vụ tiếp tục thực hiện các tác vụ khác trong khi chờ phản hồi.
+    Giao tiếp không đồng bộ thường được thực hiện thông qua việc sử dụng hàng chờ tin nhắn (message queue).
+\end{itemize}
+Việc chọn ra một chuẩn giao tiếp phù hợp với ứng dụng trong quá trình thiết kế mang ý nghĩa quan trọng khi mà mỗi cách giao tiếp đều đi kèm những lợi ích và giới hạn riêng cho từng hệ thống cũng như là đội phát triển ứng dụng.
+Hệ thống quản lý quán ăn yêu cầu khả năng xử lý các yêu cầu từ khách hàng một cách nhanh chóng, hiệu quả, từ đó khi thiết kế hệ thống, hàng đợi tin nhắn như một lựa chọn tốt nhất với những yêu cầu nghiệp vụ nói trên.
+Điều này giúp các dịch vụ giảm sự phụ thuộc vào nhau khi chỉ cần biết địa chỉ của hàng đợi tin nhắn mà không cần biết địa chỉ của các dịch vụ khác trong cùng mạng.
+Hàng đợi tin nhắn cũng giúp tránh thất thoát dữ liệu, một trường hợp có thể xảy ra là khi một dịch vụ không hoạt động, các tin nhắn vẫn được lưu trữ ở trong hàng đợi và sẽ được xử lý một khi dịch vụ đó trở lại hoạt động.
+
+Các công nghệ hàng đợi tin nhắn (message broker) phổ biến trên thị trường hiện nay có thể kể đến bao gồm Kafka, RabbitMQ, Amazon Simple Queue Service, v.v.
+Ở đây, RabbitMQ được lựa chọn nhờ sự đơn giản trong quá trình triển khai và cài đặt đơn giản hơn các dịch vụ khác.
+Chi tiết về cách hàng đợi tin nhắn được sử dụng trong hệ thống quản lý quán ăn được đề cập ở Mục~\nameref{sec:system-architecture}.
 \subsection{MongoDB}
+Trong hệ thống quản lý nhà hàng phức tạp, việc lưu trữ và truy vấn dữ liệu hiệu quả là rất quan trọng.
+Khác với các cơ sở dữ liệu truyền thống, MongoDB thuộc dạng cơ sở dữ liệu NoSQL, tức MongoDB có khả năng lưu trữ dữ liệu dạng tài liệu hay các dữ liệu phi cấu trúc một cách linh hoạt dưới dạng JSON. Điều này khiến cho cấu trúc bảng, dữ liệu có thể dễ dàng thích ứng với những thay đổi bất ngờ trong mô hình dữ liệu và yêu cầu nghiệp vụ.
+Trong MongoDB, khái niệm khóa chính (primary key) và khóa ngoại (foreign key) không tồn tại theo cách hiểu truyền thống như trong các hệ quản trị cơ sở dữ liệu quan hệ (RDBMS). Tuy nhiên, MongoDB có những cơ chế riêng để đảm bảo tính toàn vẹn dữ liệu và tạo mối quan hệ giữa các bản ghi.
+Đối với khóa chính, MongoDB tự động tạo một trường \tcode{\_id} cho mỗi tài liệu ngoại trừ những trường hợp người dùng chỉ định rõ.
+Trường này có giá trị là một \tcode{ObejctId} duy nhất trên toàn bộ cơ sở dữ liệu.
+Giá trị của \tcode{ObejctId} là một chuỗi \tcode{byte} dài 12 ký tự trong đó 4 \tcode{byte} mang giá trị là thời gian tạo \tcode{Id}, 5 \tcode{byte} là giá trị ngẫu nhiên được tạo ra dựa theo \tcode{Id} của tiến trình và của máy, cuối cùng là 3 \tcode{byte} được tạo với một bộ đếm tăng dần, bộ đếm này sẽ được khởi tạo với một giá trị ngẫu nhiên~\footnote{https://www.mongodb.com/docs/manual/reference/method/ObjectId/}.
+
+Ngoài ra, MongoDB còn có một phiên bản dịch vụ đám mây gọi là MongoDB Atlas, mang lại nhiều lợi ích như khả năng mở rộng tài nguyên tự động, sao lưu và phục hồi dữ liệu, giám sát và cảnh báo, giúp giảm thiểu công việc quản trị và đảm bảo hệ thống luôn sẵn sàng phục vụ.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{images/hChip/MongoDB/mongodb-preview.png}
+	\caption{Giao diện người dùng của MongoDB Atlas}
+	\label{fig:mongoDB-preview}
+\end{figure}
+
+Đối với một cơ sở dữ liệu thông thường, việc giám sát thông tin thường tập trung vào các loại như hiệu suất truy vấn, mức độ sử dụng tài nguyên, và trạng thái hoạt động.
+Các chức năng này đều được MongoDB Atlas cung cấp trên nền tảng website gồm các chức năng như ghi nhật ký, các cảnh báo tùy chỉnh theo nhu cầu người dùng, giám sát tài nguyên hoạt động theo thời gian thực, v.v.
+Từ đó khóa luận này quyết định sử dụng MongoDB cũng như là MongoDB Atlas làm cơ sở dữ liệu của hệ thống quản lý quán ăn.
+Về chi tiết về mặt thiết kế cơ sở dữ liệu của hệ thống quản lý nhà hàng, quán ăn được đề cập ở Mục~\nameref{sec:database-design}.
 \subsection{Kong}
+Các hệ thống lớn hàng ngày sẽ phải tiếp nhận các lời gọi với tần suất rất lớn từ người dùng, đặc biệt là trong các giờ cao điểm trong ngày.
+Không những thế, những hệ thống này còn có thể phải đối mặt với nguy cơ bị DDOS (Distributed Denial-of-Service), tức khi hệ thống bị ngợp bởi một lượng truy cập lớn có thể gây ra tê liệt hệ thống.
+Cổng API (API Gateway) từ đây mang lại tác dụng như một điểm truy cập duy nhất cho ứng dụng, từ đó cấu hình chi tiết bên trong của nền tảng được ẩn dưới lớp API Gateway này.
+Một trong những cổng API phổ biến đó là Kong Gateway.
+Kong cung cấp các tiện ích khi sử dụng như chuyển đổi giao thức, đánh số, kiểm soát phiên bản API, giới hạn tốc độ truy cập và tích hợp các dịch vụ xác thực ở bên ngoài, v.v.
+
+Khóa luận này thực hiện triển khai Kong Gateway trên một máy chủ thuộc GCP với Kong Manager.
+Kiến trúc nền tảng của công gồm 3 thành phần bao gồm bộ định tuyển (router), dịch vụ (service), và máy chủ đích (upstream).
+Khi nhận được yêu cầu từ ngoài vào, Kong Gateway sẽ khớp yêu cầu với Route phù hợp và chuyển tiếp yêu cầu đến Service tương ứng hoặc là tới các cân bằng tải đến cụm các Service trong Upstream.
+Nhằm quản lý Kong dễn dàng và hiệu quả hơn, khóa luận sử dụng Kong Manager.
+Kong Manager là bản thân Kong Gateway đã được trực quan hóa trên nền tảng web, điều này giúp người dùng dễ dàng tạo, chỉnh sửa và xóa các Route, Service và Upstream, phát triển, cấu hình các plugin nhằm mở rộng chức năng của Kong Gateway, giám sát lưu lượng truy cập API và hiệu suất của Kong.
 \section{Quy trình triển khai}\label{sec:deploy-environment}
-Nhằm đánh giá tính hiệu quả của phương pháp đề xuất, khóa luận đã cài đặt một số mô-đun và tích hợp phương pháp đề xuất trên công cụ AKAUTAUTO và thực hiện thực nghiệm trên công cụ này. AKAUTAUTO là một công cụ kiểm thử tự động cho mã nguồn C/C++, được nghiên cứu và phát triển bởi Phòng thí nghiệm Đảm bảo chất lượng phần mềm (Khoa Công nghệ thông tin, Trường Đại học Công nghệ, ĐHQGHN) và đơn vị FPT-GAM (FPT Global Automative \& Manufacturing). Khóa luận kế thừa kiến trúc của công cụ AKAUTAUTO phiên bản 5.9.2, phiên bản tích hợp sẵn phương pháp kiểm thử tượng trưng động và phương pháp sinh giả lập mã nguồn tự động AS4UT, và bổ sung, cải tiến một số mô-đun trong kiến trúc gốc để tích hợp phương pháp đề xuất (phiên bản 5.9.2-thesis).
+Trong bối cảnh phát triển các phần mềm hiện đại, khi mỗi dự án bao gồm nhiều đội ngũ phát triển phần mềm khác nhau với tần suất thay đổi mã nguồn ngày.
+Nhằm lưu trữ, theo dõi các thay đổi một cách hiệu quả cũng như tăng cường hiệu quả phối hợp giữa các thành viên trong nhóm phát triển, các phần mềm quản lý mã nguồn (VCS - Version Control System) dần trở thành công cụ không thể thiếu trong giai đoạn phát triển cũng như là triển khai hệ thống.
+Các VCS tiêu biểu có thể kể đến như là GitLab và GitHub, mặc dù cả hai nền tảng đều cung cấp đầy đủ các phương pháp quản lý mã nguồn hệ thống, cấu hình quyền người dùng linh hoạt và đều tích hợp các công cụ hỗ trợ kiểm thử hệ thống mạnh mẽ, GitLab nổi trội hơn GitHub về mặt tích hợp và triển khai liên tục (CI/CD) tốt hơn GitHub do cung cấp nhiều chức năng như bỏ qua các quy trình triển khai khi cần thiết, kết quả chạy đồng nhất và hiệu quả hơn, v.v. nên GitLab được lựa chọn là nền tảng quản lý mã nguồn cho hệ thống quản lý quán ăn.
 
-% \subsection{Tổng quan kiến trúc công cụ AKAUTAUTO}
-Công cụ AKUTAUTO được phát triển bằng ngôn ngữ Java với kiến trúc bao gồm sáu mô-đun chính lần lượt là mô-đun xây dựng môi trường kiểm thử, mô-đun phân tích mã nguồn, mô-đun xử lý hàm thiếu định nghĩa, mô-đun sinh dữ liệu kiểm thử, mô-đun thực thi \& phân tích ca kiểm thử và mô-đun sinh báo cáo kiểm thử. Hình \ref{fig:architect} mô tả kiến trúc của công cụ AKAUTAUTO gồm sáu mô-đun kể trên và các thành phần ngoài gồm trình biên dịch C/C++, bộ giải Z3 và thư viện phân tích mã nguồn CDT Parser. Trong đó, khóa luận đã bổ sung mô-đun xử lý hàm thiếu định nghĩa so với kiến trúc gốc, và cải tiến hai mô-đun phân tích mã nguồn và mô-đun sinh dữ liệu kiểm thử (thể hiện bởi các khối in đậm).
+Nền tảng quản lý quán ăn được chia làm tám kho lưu trữ mã nguồn (repository) bao gồm năm kho lưu trữ các mã nguồn thuộc về mặt logic của hệ thống, mỗi bộ mã nguồn tương dương với một vi dịch vụ và ba kho lưu trữ bao gồm trang giới thiệu (landing-page), trang quản lý nhà hàng (admin-page), và một trang mô phỏng phần đặt hàng của người dùng (customer-page).
 
-Đầu vào của công cụ AKAUTAUTO gồm hai thành phần chính lần lượt là các tệp mã nguồn kiểm thử và cấu hình kiểm thử. Hai thành phần này được cung cấp bởi kiểm thử viên hoặc lập trình viên. Mô-đun xây dựng môi trường kiểm thử là mô-đun tiếp nhận các thành phần đầu vào và đảm nhiệm vai trò thực hiện hai tác vụ tiền xử lý mã nguồn trong pha xây dựng môi trường kiểm thử. Hai tác vụ tiền xử lý đã được đề cập ở Mục~\ref{sec:3-build-env} gồm thiết lập môi trường và tạo môi trường tính toán độ phủ. Mô-đun xây dựng môi trường kiểm thử cấu thành bởi ba thành phần chính đó là thành phần thiết lập môi trường, thành phần tải dự án và thành phần tạo môi trường tính toán độ phủ. Trong đó, hai thành phần thiết lập môi trường và tạo môi trường tính toán độ phủ thực hiện hai tác vụ tương ứng đã nêu. Thành phần tải dự án có nhiệm vụ xác định các tệp mã nguồn được người dùng thiết lập, sau đó kiến tạo đỉnh tệp của từng cây cấu trúc tệp tương ứng. Đầu ra của mô-đun gồm các tệp mã nguồn đã được thêm lệnh đánh dấu và tập các cây cấu trúc tệp cơ bản sinh bởi thành phần tải dự án. Các tệp mã nguồn chứa lệnh đánh dấu sẽ được sử dụng bởi mô-đun xử lý hàm thiếu định nghĩa nhằm sinh thân hàm giả trên tệp mã nguồn này. Tập cây cấu trúc tệp cơ bản và mã nguồn gốc sẽ được phân tích bởi mô-đun phân tích mã nguồn.
+Khi một thay đổi đối với mã nguồn được đẩy lên kho lưu trữ của GitLab, một quá trình kiểm tra và triển khai được cấu hình trước sẽ được chạy bởi GitLab Runner.
+GitLab Runner là một ứng dụng chuyên biệt được phát triển bởi GitLab tích hợp với kho lưu trữ giúp chạy các câu lệnh cấu hình, kiểm thử và triển khai mã nguồn.
+Ngoài lựa chọn sử dụng GitLab runner của riêng GitLab, việc tự triển khai riêng các GitLab Runner mang giúp khả năng tuỳ chỉnh cấu hình cụ thể của hạ tầng CI/CD, từ đó giúp tiết kiệm chi phí vận hành.
 
-Các mô-đun tiếp theo trong kiến trúc của công cụ AKAUTAUTO được khóa luận bổ sung hoặc cải tiến gồm mô-đun phân tích mã nguồn, mô-đun xử lý hàm thiếu định nghĩa và mô-đun sinh dữ liệu kiểm thử. Chi tiết về sự cải tiến của mô-đun phân tích mã nguồn và mô-đun sinh dữ liệu kiểm thử được trình bày lần lượt ở Mục~\ref{sec:module-analyze} và Mục~\ref{sec:module-autogen}. Mô-đun xử lý hàm thiếu định nghĩa được bổ sung so với kiến trúc gốc nhằm giải quyết các vấn đề phát sinh bởi nguyên mẫu hàm thiếu định nghĩa. Nội dung chi tiết của mô-đun này được trình bày ở Mục~\ref{sec:module-undef}. 
+Có hai pha chính sẽ được thực hiện mỗi khi nhà phát triển phần mềm đẩy code lên kho mã nguồn của GitLab do GitLab Runner phụ trách đó là pha biên dịch mã nguồn và triển khai mã nguồn trên K8s và một pha phụ đó là cấu hình tệp \tcode{.env} cho mã nguồn trước đó giúp đẩy các biến môi trường giúp biên dịch mã nguồn.
+Khi một thay đổi mới được đẩy lên GitLab, GitLab Runner sẽ tìm đọc tệp cấu hình \tcode{.gitlab-ci.yml} để xác nhận những chỉ dẫn cần được thực thi.
 
-Khóa luận kế thừa mô-đun thực thi và phân tích ca kiểm thử từ kiến trúc gốc của công cụ. Mô-đun này đóng vai trò  sinh trình điều khiển kiểm thử, thực thi trình điều khiển và phân tích đường thi hành thu được sau khi chạy ca kiểm thử. Cấu trúc của mô-đun gồm ba thành phần chính với nhiệm vụ chi tiết của từng thành phần như sau:
-\begin{itemize}
-    \item Thành phần sinh trình điều khiển kiểm thử: Đảm nhiệm hai vai trò chuyển đổi bộ nghiệm giải từ ràng buộc thành dữ liệu kiểm thử C++ và sinh trình điều khiển kiểm thử dựa trên dữ liệu mới. Trình điều khiển kiểm thử là một tệp C++ được tự động sinh ra nhằm chuyển đổi dữ liệu kiểm thử C++ thành các cú pháp C++ giúp khởi tạo giá trị tham số đầu vào của đơn vị kiểm thử. Các cú pháp C++ trong trình điều khiển gồm hai phần chính đó là phần định nghĩa tham số đầu vào và phần gọi đơn vị kiểm thử. Trình điều khiển cũng đảm nhiệm chuyển hóa dữ liệu kiểm thử C++ thành các mã nguồn giả lập cho các hàm cần stub.
-    \item Thành phần thực thi ca kiểm thử: Có nhiệm vụ biên dịch trình điều khiển và các tệp mã nguồn chứa lệnh đánh dấu thành tệp đối tượng rồi sau đó liên kết các tệp này để tạo thành tệp thực thi. Công cụ chạy tệp thực thi này và thu được danh sách các câu lệnh, các nhánh điều kiện được viếng thăm bởi ca kiểm thử.
-    \item Thành phần phân tích đường thi hành: Có chức năng ánh xạ danh sách các câu lệnh, nhánh điều kiện được viếng thăm sang đỉnh tương ứng trong CFG của đơn vị kiểm thử. Tiếp đó, thành phần cập nhật dữ liệu viếng thăm của CFG dựa trên tập đỉnh được ánh xạ. Cuối cùng, thành phần phân tích đường thi hành sẽ tìm đường thi hành ngắn nhất chưa được viếng thăm và truyền đường thi hành này sang mô-đun sinh dữ liệu kiểm thử.
-\end{itemize}
+\begin{lstlisting}[style=yaml, caption={Đoạn mã cấu hình cài đặt biến môi trường cho GitLab Runner.}, label={cod:env-gitlab-ci/cd},  captionpos=b]
+build_env:
+  tags:
+    - ${RUNNER_TAG}
+  stage: build_env
+  image: alpine/k8s:1.23.16
+  script:
+    - cat $PATH_DOCKER_BUILD_ENV_FILE > .env
+  artifacts:
+    paths:
+      - .env
+\end{lstlisting}
 
-Mô-đun cuối cùng trong kiến trúc công cụ là mô-đun sinh báo cáo kiểm thử. Mô-đun này có vai trò tính toán độ phủ của đơn vị kiểm thử dựa trên dữ liệu viếng thăm của CFG và tạo báo cáo kiểm thử sau khi quá trình sinh dữ liệu kiểm thử tự động kết thúc. Hình \ref{fig:report} mô tả ví dụ báo cáo kiểm thử LCOV của hàm \tcode{foo}. Khóa luận đã sinh dữ liệu kiểm thử tự động cho hàm \tcode{foo} và đạt được độ phủ 100\% câu lệnh cũng như 100\% nhánh với ba ca kiểm thử. Các thông tin ở góc trên phải của báo cáo cho biết 7/20 dòng lệnh của tệp chứa hàm \tcode{foo} và 4/4 nhánh điều kiện có trong hàm được thăm bởi ba ca kiểm thử này. 
+Đoạn mã~\ref{cod:env-gitlab-ci/cd} cho thấy cách đẩy tệp \tcode{.env} vào môi trường biên dịch.
+Biến môi trường \tcode{\$PATH\_DOCKER\_BUILD\_ENV\_FILE} được sử dụng trong đoạn mã được cấu hình trong như một biến môi trường của dự án trên GitLab bên cạnh các biến môi trường khác được GitLab cung cấp sẵn khi chạy CI/CD.
+Ở đây giá trị của biến là nội dung tệp \tcode{.env} là các biến hệ thống cần giúp cho hệ thống có thể biên dịch thành công bao gồm địa chỉ của kho lưu trữ ảnh và tệp trên Amazon S3, các biến trỏ đến đường dẫn các dịch vụ khác của hệ thống.
 
-% \begin{figure}
-%     \centering
-%     \includesvg[width=0.8\linewidth]{images/module-build.svg}
-%     \caption{Các thành phần trong mô-đun xây dựng môi trường kiểm thử.}
-%     \label{fig:module-build}
-% \end{figure}
+Sau khi mã nguồn trên kho lưu trữ của GitLab có tệp \tcode{env} cần thiết, GitLab Runner sẽ bắt đầu quá trình biên dịch mã nguồn hệ thống. Đoạn mã~\ref{cod:build-gitlab-ci/cd} sử dụng \tcode{kaniko} giúp chạy lệnh biên dịch mã nguồn sang ảnh Docker.
+Kaniko~\footnote{https://github.com/GoogleContainerTools/kaniko} là một công cụ giúp xây dựng các ảnh Docker từ Dockerfile, có thể chạy bên trong một container hoặc một cụm K8s.
+Kaniko giúp giải quyết hai vấn đề khi build Docker trong Docker (Docker-in-Docker)~\footnote{https://docs.gitlab.com/ee/ci/docker/using\_docker\_build.html\#use-docker-in-docker} đó là tránh việc phải chạy Docker ở quyền quản trị trong ảnh Docker, vốn là một điều phải có khi cần quyền truy cập vào Docker daemon của máy chủ, và giúp tối ưu quá trình chạy Docker-in-Docker (DinD) thông qua caching hiệu quả các lớp (layer) ảnh Docker~\footnote{https://cloud.google.com/blog/products/containers-kubernetes/introducing-kaniko-build-container-images-in-kubernetes-and-google-container-builder-even-without-root-access}.
 
-% Đầu vào của mô-đun xây dựng môi trường kiểm thử gồm tập mã nguồn kiểm thử và tệp cấu hình kiểm thử được người dùng thiết lập thông qua giao diện của công cụ. Đoạn~mã~\ref{cod:enviro} minh họa tệp cấu hình kiểm thử đầu vào. Dòng 2-11 trong đoạn mã cho biết môi trường kiểm thử sử dụng trình biên dịch GNU mặc định của máy kèm theo một số câu lệnh cơ bản để biên dịch mã nguồn kiểm thử. Dòng 12-14 cho biết thêm thông tin về tên của môi trường kiểm thử, phương pháp kiểm thử cũng như loại độ phủ sẽ được tính là gì. Môi trường ví dụ có tên là \tcode{auto-sample}, sử dụng phương pháp kiểm thử tự động đề xuất bởi khóa luận và hai kiểu độ phủ được tính là độ phủ câu lệnh và độ phủ MCDC. Tệp cấu hình kiểm thử được lưu lại nhằm phục vụ cho các lần kiểm thử sau trên cùng môi trường \tcode{auto-sample}. 
-% \begin{figure}[h]
-% \begin{lstlisting}[language={}, caption={Tệp cấu hình kiểm thử.}, captionpos=b, label={cod:enviro}]
-% ENVIRO.NEW
-% ENVIRO.COMPILER.NEW
-% ENVIRO.COMPILER.NAME: [GNU Native] C++
-% ENVIRO.COMPILER.COMPILE_CMD: g++ -c -w
-% ENVIRO.COMPILER.PREPROCESS_CMD: g++ -c -E
-% ENVIRO.COMPILER.LINK_CMD: g++ -w
-% ENVIRO.COMPILER.INCLUDE_FLAG: -I
-% ENVIRO.COMPILER.DEFINE_FLAG: -D
-% ENVIRO.COMPILER.OUTPUT_FLAG: -o
-% ENVIRO.COMPILER.OUTPUT_EXT: .out
-% ENVIRO.COMPILER.END
-% ENVIRO.NAME: auto_sample
-% ENVIRO.TESTING_METHOD: PROPOSED-METHOD
-% ENVIRO.COVERAGE_TYPE: STATEMENT+MCDC
-% ENVIRO.END
-% \end{lstlisting}
-% \end{figure}
-% \subsection{Mô-đun phân tích mã nguồn}\label{sec:module-analyze}
-Mô-đun phân tích mã nguồn đảm nhiệm vai trò trích xuất, phân tích thông tin từ AST của mã nguồn kiểm thử, xây dựng đồ thị cấu trúc mã nguồn và cung cấp dịch vụ tìm kiếm thông tin đỉnh trên đồ thị. Hình~\ref{fig:module-analyze} mô tả cấu trúc của mô-đun với ba thành phần lần lượt là thành phần sinh AST, thành phần sinh đồ thị cấu trúc mã nguồn và thành phần tìm kiếm trên đồ thị. Trong đó, khóa luận kế thừa thành phần sinh AST, cải tiến mô-đun sinh đồ thị cấu trúc mã nguồn và bổ sung thành phần tìm kiếm trên đồ thị.
-\vspace{5mm}
+\begin{lstlisting}[style=yaml, caption={Đoạn mã cấu hình quá trình biên dịch mã cho GitLab Runner.}, label={cod:build-gitlab-ci/cd},  captionpos=b]
+build:
+  stage: build
+  tags:
+    - ${RUNNER_TAG}
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    # - echo $IMAGE_REGISTRY_URL
+    - echo $IMAGE_REGISTRY_USER
+    # - echo $IMAGE_REGISTRY_PASS
+    - echo "{\"auths\":{\"$IMAGE_REGISTRY_URL\":{\"auth\":\"$(printf "%s:%s" "$IMAGE_REGISTRY_USER" "$IMAGE_REGISTRY_PASS" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    # - cat /kaniko/.docker/config.json
+  script:
+    - ls -la
+    - cat .env
+    - echo $IMAGE_NAME_BUILD
+    - echo $IMAGE_NAME_BUILD_LATEST
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --cache=true
+      --destination "$IMAGE_REGISTRY_URL/$IMAGE_NAME_BUILD_LATEST"
+\end{lstlisting}
+
+Trong Đoạn mã~\ref{cod:build-gitlab-ci/cd}, phần \tcode{before\_script} giúp người dùng đăng nhập vào một kho lưu trữ ảnh Docker (Docker Registry) giúp dễ dàng quản lý và triển khai trên K8s.
+Sau đó GitLab Runner chạy phần \tcode{script} để biên dịch hệ thống dựa theo tệp \tcode{Dockerfile} được định nghĩa trước trong quá trình phát triển và kiểm thử hệ thống.
+
+Cuối cùng pha triển khai (deploy) mã lên K8s của GCP, GitLab Runner được cấu hình chạy một tệp lệnh chương trình sử dụng kubectl, một công cụ giúp giao tiếp với các Master Node (Control Plane)~\footnote{https://kubernetes.io/docs/reference/kubectl/}.
+Các cấu hình cho môi trường K8s nằm trong tệp \tcode{deployment-gke.yml} bao gồm các thành phần cài đặt cấu hình cho Ingress, Service và Deployment của hệ thống.
+Đối với phần cấu hình cho Ingress và Service, K8s sẽ chỉ cần có số cổng mà ứng dụng mở ra ngoài và tên của kho mã nguồn, tuy nhiên ở phần cấu hình cho Deployment và autoscaling (tự động mở rộng), các trường thông tin sẽ ảnh hưởng nhiều đến hiệu năng của ứng dụng hơn như thông số của API kiểm tra tình trạng hoạt động, các thông số cấu hình phần cứng liên quan đến bộ nhớ và CPU cho mỗi Pod, và giới hạn số lượng pod tối đa khi hệ thống mở rộng cũng như là ngưỡng hệ thống quá tải cần mở rộng thêm.
+\begin{lstlisting}[style=yaml, caption={Đoạn mã cấu hình cài đặt tự động mở rộng Kubernetes cho GitLab Runner.}, label={cod:k8s-gitlab-ci/cd},  captionpos=b, escapechar=|]
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: $CI_PROJECT_NAME
+  namespace: $CI_PROJECT_ROOT_NAMESPACE
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: $CI_PROJECT_NAME
+  minReplicas: 1
+  maxReplicas: 5|\label{line:sp}|
+  metrics:
+    - resource:
+        name: memory
+        target:
+          averageUtilization: 80
+          type: Utilization
+      type: Resource
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 50
+          type: Utilization
+      type: Resource
+\end{lstlisting}
+Nhằm phục vụ quá trình kiểm thử sản phẩm ở Chương~\nameref{chap4}, ngưỡng tự động mở rộng trong Đoạn mã~\ref{cod:k8s-gitlab-ci/cd} được đặt tại giới hạn sử dụng 80\% bộ nhớ và 50\% CPU.
+Khi bất kỳ một Pod nào thuộc Deployment đạt tới ngưỡng, GKE sẽ tự động tạo thêm một Pod mới giúp giãn tải trên các Pod đang hoạt động, tới một giới hạn số lượng Pod tối đa là năm như được cấu hình tại Dòng~\ref{line:sp}, Đoạn mã~\ref{cod:k8s-gitlab-ci/cd}.
+\section{Một số luồng chức năng chính}\label{sec:user-flow-examples}
+Như đã nói ở Mục~\ref{sec:main-functions}, các luồng chính của nền tảng quản lý nhà hàng, quán ăn được mô tả sẽ bao gồm luồng đặt bàn của người dùng khách hàng tại quán ăn và luồng đặt đồ ăn thông qua việc quét mã QR từ phía người dùng.
+Ở Chương này, ta sẽ đi sâu vào luồng di chuyển của người dùng cũng như là các lời gọi dữ liệu giữa các dịch vụ với nhau trong hệ thống.
+\subsection{Luồng đặt bàn}\label{sec:reservation-sequence-flow}
+Sơ đồ tuần tự ở Hình~\ref{fig:reservation-sequence-flow} mô tả cách người dùng tương tác với tính năng đặt hàng trên giao diện tại trang giới thiệu.
+Sơ đồ tồn tại các tác nhân chính là người dùng/thực khách có nhu cầu đặt bàn, giao diện người dùng tương tác khi đặt bàn có thể từ trang giới thiệu nền tảng quản lý nhà hàng, quán ăn hoặc các trang riêng của nhà hàng có liên kết với hệ thống quản lý.
+Tiếp theo đó là \tcode{product-service} tiếp nhận các lời gọi từ phía người dùng và xử lý chúng.
+Hai tác nhân cuối gồm \tcode{admin-page} và nhân viên của cửa hàng phụ trách việc tiếp nhận, xác nhận lại yêu cầu đặt bàn của người dùng.
+
 \begin{figure}[h]
-    \centering
-    \includesvg[width=0.8\linewidth]{images/module-analyze.svg}
-    \caption{Các thành phần trong mô-đun phân tích mã nguồn.}
-    \label{fig:module-analyze}
+	\centering
+	\includegraphics[width=\textwidth]{images/hChip/main-flow/reservation.png}
+	\caption{Sơ đồ tuần tự mô tả luồng nghiệp vụ đặt bàn trực tuyến}
+	\label{fig:reservation-sequence-flow}
 \end{figure}
 
-Mô-đun phân tích mã nguồn nhận đầu vào là mã nguồn kiểm thử gốc và các đỉnh tệp từ đầu ra của mô-đun xây dựng môi trường. Bắt đầu từ mỗi đỉnh tệp, dựa trên quan hệ cha con trên AST của từng tệp mã nguồn, quá trình sinh cây cấu trúc tệp được diễn ra song song. Sau đó, tập cây cấu trúc tệp được chuyển sang thành phần hoàn thiện đồ thị cấu trúc để bổ sung cạnh kế thừa và cạnh lời gọi hàm. Tại thành phần này, từng cây cấu trúc tệp được xét và tìm kiếm các đỉnh có tiêu chí phù hợp với kiểu cạnh đang xét trên các cây cấu trúc còn lại. Kết quả của quá trình xây dựng là đồ thị cấu trúc mã nguồn kiểm thử.
+Luồng người dùng bắt đầu khi người dùng thực hiện tìm kiếm quán ăn trên trang giới thiệu của hệ thống hoặc của từng cửa hàng, khách hàng sẽ có lựa chọn đặt bàn tại quán ăn.
+Sau khi khách hàng đã chọn xong bàn và điền các thông tin được yêu cầu, hệ thống sẽ kiểm tra tình trạng hiện tại của quán ăn và xác nhận lại với khách hàng tình trạng đặt bàn trên giao diện.
+Một khi người dùng thực hiện đặt bàn thành công, thông tin sẽ được đẩy đến trung tâm thông báo và chuyển tiếp đến các dịch vụ khác, ở đây là trang quản lý nhà hàng. 
+Nhân viên của quán ăn sẽ xác nhận yêu cầu đặt bàn của khách hàng và tiến hành phân bàn cho khách dựa trên số lượng, yêu cầu khi đặt bàn.
+Nếu không thể chọn được bàn phù hợp cho yêu cầu của thực khách, nhân viên của quán ăn sẽ thay đổi trạng thái của phần đặt bàn thành đã hủy và ngược lại là thành công nếu có bàn.
 
-Khóa luận đã cải tiến thành phần sinh đồ thị cấu trúc mã nguồn như sau. Trước hết, khóa luận tích hợp thành phần ánh xạ cây cấu trúc và thành phần phân tích phụ thuộc~\cite{TUNG2022106821} trong kiến trúc gốc thành mô-đun sinh đồ thị cấu trúc mã nguồn. Quá trình tích hợp bổ sung các luồng xử lý song song quá trình sinh cây cấu trúc tệp giúp giảm thời gian phân tích mã nguồn. Sau đó, khóa luận bổ sung các loại đỉnh mới biểu thị cho các kiểu khai báo mới trong ngôn ngữ C++ như không gian tên, câu lệnh sử dụng không gian tên, khai báo lớp không cần tên kiểu, v.v. Qua đó, thành phần này có thể phân tích và biểu diễn được các đặc trưng mới của C++ trên đồ thị cấu trúc mã nguồn.\\
-
-Tìm kiếm thông tin đỉnh trên đồ thị là quá trình cốt lõi phục vụ cho quá trình xử lý hàm thiếu định nghĩa và quá trình sinh dữ liệu kiểm thử tự động. Trong kiến trúc gốc, quá trình tìm kiếm duyệt qua các đỉnh trên đồ thị, kiểm tra thông tin của đỉnh có hợp với tiêu chí tìm kiếm rồi thêm vào tập kết quả nếu hợp lệ. Trong thực tế, đồ thị cấu trúc thường rất lớn. Vậy nên quá trình tìm kiếm tốn nhiều bộ nhớ bởi quá trình đệ quy xuống đỉnh. Để khắc phục nhược điểm này, khóa luận bổ sung thành phần tìm kiếm trên đồ thị với ý tưởng chính dựa trên tìm kiếm kết hợp bảng băm và cơ sở dữ liệu. Việc tìm kiếm thông tin đỉnh thường sử dụng hai tiêu chí đó là tên hàm và tên kiểu. Tận dụng điều này, khóa luận tạo cơ sở dữ liệu lưu trữ thông tin về kiểu và hàm của mã nguồn kiểm thử. Cơ sở dữ liệu gồm hai trường chính đó là $id$ - khóa chính biểu thị mã định danh của hàm hoặc kiểu và $name$ - tên hàm hoặc tên kiểu. Sau quá trình xây dựng đồ thị cấu trúc mã nguồn, mỗi đỉnh trong đồ thị được cấp một mã định danh cố định $id$. Mã định danh này là giá trị băm xâu đường dẫn của đỉnh, trong đó xâu đường dẫn là chuỗi tên các đỉnh trên đường đi từ đỉnh tệp xuống đỉnh đang xét. Khóa luận sử dụng một bảng băm để ánh xạ $id$ và đỉnh sở hữu $id$. Để nhanh chóng tìm kiếm tên trong cơ sở dữ liệu, khóa luận sử dụng hệ quản trị cơ sở dữ liệu SQLite\footnote{https://www.sqlitetutorial.net/sqlite-full-text-search/} với cơ chế FULLTEXT INDEX trên cột $name$. Để tìm kiếm một đỉnh phù hợp, trước hết quá trình tìm kiếm sẽ thu thập các dòng trong cơ sở dữ liệu có chứa tên hàm hoặc tên kiểu, trích xuất $id$ và dựa vào bảng băm để lấy ra đỉnh cần xét. 
-
-Quá trình nghiên cứu, cải tiến mô-đun phân tích mã nguồn tốn nhiều thời gian do số lượng tệp ảnh hưởng bởi mô-đun này là rất lớn (113 tệp ảnh hưởng và 5476 LOC thay đổi). Tuy nhiên, quá trình trên là cần thiết bởi công cụ AKAUTAUTO phiên bản 5.9.2 thường gặp lỗi hết bộ nhớ ảo trong quá trình phân tích mã nguồn khi chạy trên các dự án có kích thước lớn, cấu trúc phức tạp và có nhiều sự tương tác trong các thành phần với nhau. Sau quá trình cải tiến, công cụ AKAUTAUTO phiên bản 5.9.2-thesis đã có thể phân tích được những bộ mã nguồn có kích thước lớn, đồng thời không gặp tình trạng hết bộ nhớ ảo trong quá trình chạy.
-
-% \subsection{Mô-đun xử lý hàm thiếu định nghĩa}\label{sec:module-undef}
-Mô-đun xử lý hàm thiếu định nghĩa được khóa luận bổ sung so với kiến trúc gốc nhằm thực hiện nhiệm vụ của pha xử lý hàm thiếu định nghĩa. Hình~\ref{fig:module-undef} mô tả các thành phần cấu thành lên mô-đun gồm thành phần thu thập, thành phần lọc tìm ứng viên, thành phần xử lý nguyên mẫu hàm ảo và thành phần sinh thân hàm giả. Mô-đun xử lý hàm thiếu định nghĩa được thiết kế để xử lý hai loại nguyên mẫu hàm thiếu định nghĩa như đã mô tả ở Mục~\ref{sec:handle-undef}. Chi tiết về các thành phần như sau.
-\begin{itemize}
-    \item Thành phần thu thập: Đóng vai trò thu thập danh sách các nguyên mẫu hàm thiếu định nghĩa cần sinh thân hàm giả. Thành phần thu thập sử dụng các công cụ tiện ích của trình biên dịch để thu thập danh sách này. Phương pháp thu thập đã được trình bày ở Mục~\ref{sec:handle-undef-first}.
-    \item Thành phần xử lý nguyên mẫu hàm ảo: Có chức năng tìm kiếm các nguyên mẫu hàm ảo thiếu định nghĩa sử dụng phương pháp đề xuất ở Mục~\ref{sec:handle-undef-second}. Danh sách các nguyên mẫu hàm ảo tìm được sẽ được truyền sang thành phần lọc tìm ứng viên để xử lý theo Thuật~toán~\ref{alg:handle-virtual-undef}. Các nguyên mẫu hàm ảo còn lại sẽ được sinh cạnh định nghĩa tương ứng với đỉnh biểu thị hàm trong đồ thị cấu trúc.
-    \item Thành phần lọc tìm ứng viên: Thực hiện quá trình áp dụng Thuật~toán~\ref{alg:filter-undef} trên danh sách các hàm thiếu định nghĩa trả về bởi thành phần thu thập và các nguyên mẫu hàm ảo thiếu định nghĩa tìm được. Đầu ra của thành phần là danh sách các đỉnh trên đồ thị cấu trúc mã nguồn cần được sinh hàm giả. 
-    \item Thành phần sinh thân hàm giả: Đảm nhiệm vai trò sinh thân hàm giả cho danh sách các đỉnh được tổng hợp bởi thành phần lọc tìm ứng viên.
-\end{itemize}
+Ở Hình~\ref{fig:reservation-sequence-flow} không có luồng thông báo cho người dùng về trạng thái đặt bàn do người đặt bàn có thể chưa đăng ký tham gia hệ thống, điều đó khiến cho việc thông báo cho người dùng trở nên khó khăn bởi hệ thống thông báo sẽ không biết thông tin của người dùng để hiển thị.
+Nhân viên của quán sau khi thay đổi trạng thái của yêu cầu đặt bàn sẽ cần xác nhận, thông tin tới khách hàng theo dựa theo biểu mẫu mà khách cung cấp khi yêu cầu đặt bàn trên website.
+\subsection{Luồng gọi món}\label{sec:order-sequence-flow}
+Khi nhà hàng, quán ăn tham gia vào hệ thống quản lý sẽ được hỗ trợ tạo QR gán cho mỗi bàn thuộc nhà hàng giúp khách hàng có thể gọi món mà không cần tương tác với nhân viên của quán.
+Hình~\ref{fig:order-sequence-flow} mô tả quá trình từ lúc người dùng sử dụng mã QR để đặt món và nhân viên, phục vụ của nhà hàng, quán ăn thay đổi trạng thái của đơn gọi món.
+Các tác nhân trong sơ đồ bao gồm người dùng và nhân viên là hai tác nhân chính tương tác với hệ thống, trang \tcode{customer-page} giúp người dùng tương tác và thực hiện lời gọi đến hệ thống.
+Các tác nhân đảm nhiệm việc xử lý bao gồm \tcode{order-service}, \tcode{product-service}, và \tcode{notification-service}.
 
 \begin{figure}[h]
-    \centering
-    \includesvg[width=0.8\linewidth]{images/module-undef.svg}
-    \caption{Các thành phần trong mô-đun xử lý hàm thiếu định nghĩa.}
-    \label{fig:module-undef}
+	\centering
+	\includegraphics[width=1.1\textwidth]{images/hChip/main-flow/order.png}
+	\caption{Sơ đồ tuần tự mô tả luồng nghiệp vụ đặt món thông qua quét mã QR}
+	\label{fig:order-sequence-flow}
 \end{figure}
 
-Đầu ra của mô-đun xử lý hàm thiếu định nghĩa là mã nguồn chứa các câu lệnh đánh dấu đã được bổ sung thân hàm giả cho các nguyên mẫu hàm thiếu định nghĩa. Mã nguồn đã chỉnh sửa này sau đó được sử dụng để tính toán độ phủ khi chạy các ca kiểm thử bởi mô-đun thực thi và phân tích ca kiểm thử.
-
-% \subsection{Mô-đun sinh dữ liệu kiểm thử}\label{sec:module-autogen}
-Mục tiêu của mô-đun sinh dữ liệu kiểm thử là tự động tạo ra các ca kiểm thử cho các đơn vị cần kiểm thử. Mô-đun được thiết kế như Hình~\ref{fig:module-autogen} với bốn thành phần lần lượt là thành phần sinh CFG, thành phần sinh dữ liệu kiểm thử ngẫu nhiên, thành phần thực thi tượng trưng và thành phần xử lý lời gọi hàm. Trong đó, thành phần xử lý lời gọi hàm được cải tiến bởi phương pháp đề xuất ở Mục \ref{sec:autostub-obj}, các thành phần còn lại được kế thừa từ kiến trúc gốc. Chi tiết về các thành phần như sau.
-\begin{itemize}
-    \item Thành phần sinh CFG: Có chức năng xây dựng CFG cho các đơn vị trong mã nguồn.
-    \item Thành phần sinh dữ liệu kiểm thử ngẫu nhiên: Đảm nhiệm vai trò sinh các ca kiểm thử với dữ liệu ngẫu nhiên trong pha sinh dữ liệu kiểm thử tự động (mô tả ở Mục~\ref{sec:autogen}). 
-    \item Thành phần thực thi tượng trưng: Đóng vai trò thực hiện quá trình thực thi tượng trưng trên đường thi hành chưa được viếng thăm và sinh ra các ràng buộc tạo các điểm quyết định trong đồ thị dòng điều khiển. Sau đó, thành phần thực thi tượng trưng sử dụng bộ giải Z3 để giải các ràng buộc và tạo ra các giá trị đầu vào mới.
-    \item Thành phần xử lý lời gọi hàm: Có nhiệm vụ tạo giả lập mã nguồn tự động cho các lời gọi hàm xuất hiện trong đường thi hành. Khóa luận kế thừa thành phần xử lý lời gọi hàm dựa trên phương pháp AS4UT và áp dụng phương pháp xử lý lời gọi phương thức được đề xuất ở Mục \ref{sec:autostub-obj}. Đầu ra của thành phần là các thay đổi cần thiết trên CFG, bảng $MAP$ và $REF$ để giúp quá trình thực thi tượng trưng sinh ra bộ dữ liệu kiểm thử mới cho đường thi hành chưa viếng thăm.
-\end{itemize}
-
-\begin{figure}[h]
-    \centering
-    \includesvg[width=0.6\linewidth]{images/module-autogen.svg}
-    \caption{Các thành phần trong mô-đun sinh dữ liệu kiểm thử.}
-    \label{fig:module-autogen}
-\end{figure}
-% % \subsection{Mô-đun thực thi và phân tích ca kiểm thử}
-% \begin{figure}
-%     \centering
-%     \includesvg[width=0.8\linewidth]{images/module-execute.svg}
-%     \caption{Các thành phần trong mô-đun thực thi và phân tích ca kiểm thử.}
-%     \label{fig:module-execute}
-% \end{figure}
-
-% Đoạn mã \ref{cod:driver} minh họa ví dụ trình điều khiển kiểm thử sinh bởi mô-đun khi kiểm thử hàm \tcode{foo} trong Đoạn~mã~\ref{cod:autostub-object}. Dòng đầu tiên trong trình điều khiển dùng để thiết lập tên đơn vị kiểm thử, giúp các hàm được stub biết cần phải chạy mã nguồn giả lập nào (mô tả trong Đoạn~mã~\ref{cod:stub-final}). Dòng 2-3 định nghĩa tham số đầu vào \tcode{param} của hàm \tcode{foo} là một đối tượng của lớp \tcode{B} với thuộc tính \tcode{b} có giá trị 1. Dòng 4 trong trình điều khiển dùng để gọi hàm \tcode{foo} với các định nghĩa tham số được khai báo ở trên. Kết quả viếng thăm sau quá trình chạy ca kiểm thử được mô tả bởi Đoạn~mã~\ref{cod:visited}. Kết quả viếng thăm cho biết các dòng 8, 9, 10, 11 và nhánh đúng của biểu thức điều kiện ở dòng 8, 10 trong hàm \tcode{foo} được thăm. \\
-
-% \begin{figure}[h]
-%     \begin{minipage}[t]{0.5\linewidth}
-%     \begin{lstlisting}[language={C++}, caption={Trình điều khiển kiểm thử cho Đoạn mã \ref{cod:autostub-object}.}, captionpos=b, label={cod:driver}]
-% TEST_CASE_NAME = "foo";
-% B param;
-% param.b = 1;
-% int AKA_ACTUAL_OUTPUT = foo(param);
-%     \end{lstlisting}
-%     \end{minipage}
-%     \begin{minipage}[t]{0.5\linewidth}
-%     \begin{lstlisting}[language=C++, caption={Danh sách các câu lệnh và nhánh điều kiện được thăm bởi trình điều khiển.}, label={cod:visited}, captionpos=b]
-% visit_line_8
-% visit_condition_1_T
-% visit_line_9
-% visit_line_10
-% visit_condition_1_T
-% visit_line_11
-%     \end{lstlisting}
-% \end{minipage}
-% \end{figure}
-
-\section{Hướng dẫn sử dụng}\label{sec:manual}
-Mục tiêu tổ chức thực nghiệm là để đánh giá tính hiệu quả của phương pháp đề xuất trên hai tiêu chí với các độ đo tương ứng như sau:
-\begin{enumerate}
-    \item Đánh giá tính hiệu quả trong quá trình chuẩn bị môi trường kiểm thử cho mã nguồn thiếu định nghĩa giữa phương pháp xử lý hàm thiếu định nghĩa (trình bày ở Mục~\ref{sec:handle-undef}) và phương pháp truyền thống. Để so sánh giữa hai phương pháp, khóa luận sử dụng độ đo thời gian cần thiết để chuẩn bị môi trường kiểm thử. Ngoài ra, khóa luận cũng xem xét tính đúng đắn của phương pháp đề xuất.
-    \item Đánh giá tính hiệu quả khi sinh dữ liệu kiểm thử tự động cho một số mã nguồn C/C++ giữa phương pháp đề xuất ở Mục~\ref{sec:autostub-obj} và phương pháp hiện tại trong công cụ phiên bản 5.9.2 - phương pháp kiểm thử tượng trưng động kết hợp tự động giả lập mã nguồn AS4UT (gọi tắt là phương pháp AKAUTAUTO). Để so sánh giữa hai phương pháp, khóa luận sử dụng các độ đo về độ phủ mã nguồn $C_1$, $C_3$, số lượng ca kiểm thử sinh ra, thời gian sinh và bộ nhớ sử dụng trung bình cho mỗi ca kiểm thử.
-\end{enumerate}
-
-Về môi trường thực nghiệm, khóa luận sử dụng máy tính với các thông số cấu hình như sau: Ubuntu 22.04, AMD® Ryzen™ 7-5800H CPU @ 3.2GHz x 8, 16GBs RAM. Thực nghiệm được tiến hành trên một số mã nguồn mở trên Github và mã nguồn dự án thực tế thuộc đơn vị FPT-GAM như sau:
-\begin{itemize}
-    \item C-plus-plus\footnote{https://github.com/TheAlgorithms/C-Plus-Plus} (42179 LOC): Mã nguồn mở viết bằng ngôn ngữ C++ cài đặt các thuật toán thường sử dụng trong lập trình thi đấu và khoa học máy tính.
-    \item Box2d\footnote{https://github.com/erincatto/box2d} (78811 LOC): Một thư viện cung cấp các phương thức để tính toán sự tương tác vật lý giữa các vật thể trong môi trường 2 chiều.
-    \item FPT1 (23024 LOC): Mô-đun vận hành và điều hướng các yêu cầu gửi đến các dịch vụ trong trình điều khiển đa phương tiện, thuộc một dự án phát triển phần mềm xe ô tô của đơn vị FPT-GAM.
-    \item FPT2 (35891 LOC): Mô-đun cung cấp dịch vụ quản lý danh bạ, cuộc gọi trên trình điều khiển đa phương tiện, cũng thuộc dự án trên.
-\end{itemize}
-
-Khóa luận sử dụng hai dự án mã nguồn mở nhằm đảm bảo tính khách quan của thực nghiệm. Trong đó, dự án C-plus-plus được sử dụng để đánh giá khả năng sinh dữ liệu kiểm thử của phương pháp đề xuất trên các mã nguồn đơn giản, ít sự liên kết giữa các tệp. Dự án Box2d được chọn để đánh giá tính hiệu quả của phương pháp đề xuất trên các mã nguồn sử dụng nhiều đặc trưng mới của C++. Thêm vào đó, khóa luận cũng sử dụng hai mã nguồn thuộc đơn vị FPT-GAM nhằm đồng thời đánh giá tính hiệu quả và khả năng áp dụng thực tiễn của phương pháp đề xuất.
-
-\section{Một số luồng người dùng và luồng chi tiết}\label{sec:user-flow-examples}
-% \subsection{Cách thức tổ chức thực nghiệm}
-Nhằm đánh giá tính hiệu quả về mặt thời gian khi xử lý hàm thiếu định nghĩa, đồng thời đảm bảo tính khách quan của thực nghiệm, quá trình thực nghiệm được tiến hành bởi lập trình viên\footnote{Trần Trọng Năm - namtt25@fpt.com} trực thuộc đơn vị FPT-GAM. Để mô phỏng môi trường chứa hàm thiếu định nghĩa, khóa luận tiến hành thực nghiệm tính toán thời gian cần thiết để chuẩn bị môi trường kiểm thử cho một số mô-đun trong các mã nguồn mở kể trên. Ba mô-đun thực nghiệm gồm mô-đun collision (xử lý va chạm) trong mã nguồn Box2d, mô-đun FPT1 và mô-đun FPT2. Do mã nguồn C-plus-plus gồm các tệp mã nguồn không liên quan đến nhau nên khóa luận không đánh giá khả năng xử lý hàm thiếu định nghĩa trên mã nguồn này.
-
-Chuẩn bị môi trường kiểm thử là bước đầu tiên trong quy trình kiểm thử tự động. Trong bước này, lập trình viên cần bóc tách mã nguồn mình cần kiểm thử trong dự án và chỉnh sửa mã nguồn sao cho ta có thể tạo được tệp thực thi từ mã nguồn. Để tạo được tệp thực thi, lập trình viên cần xác định các kiểu dữ liệu và các hàm được sử dụng trong mã nguồn mà nằm ở mô-đun khác rồi xử lý các thành phần này để biên dịch được mã nguồn. Sau đó, lập trình viên cần xử lý các hàm thiếu định nghĩa phát sinh do mô-đun chưa phát triển xong để liên kết được các tệp và tạo thành tệp thực thi. Khóa luận tiến hành thu thập thời gian lập trình viên chuẩn bị môi trường kiểm thử giữa phương pháp truyền thống (tức làm thủ công các bước) và phương pháp đề xuất (tức làm thủ công hai bước đầu và để công cụ tự động xử lý các hàm thiếu định nghĩa).
-% \subsection{Kết quả thực nghiệm}
-Bảng~\ref{tab:time_undef} trình bày kết quả thực nghiệm trên mô-đun Box2d, FPT1 và FPT2. Các cột trong bảng có ý nghĩa như sau:
-\begin{itemize}
-    \item "Module": Tên mô-đun được xét.
-    \item "File": Số lượng tệp trong mô-đun.
-    \item "Undef": Số lượng hàm thiếu định nghĩa sau khi bóc tách mô-đun.
-    \item "Compilable": Thời gian cần thiết để bóc tách mô-đun và chỉnh sửa mã nguồn sao cho biên dịch được.
-    \item "Linkable": Thời gian cần thiết để xử lý các hàm thiếu định nghĩa sao cho tạo tệp thực thi được. Trong đó, cột "Manual" thể hiện thời gian xử lý thủ công còn cột "Propose" thể hiện thời gian xử lý sử dụng phương pháp đề xuất (tính bằng giây).
-\end{itemize}
-
-\begin{table}[h]
-    \centering
-    \caption{Kết quả thời gian chuẩn bị môi trường trên ba mô-đun thực nghiệm}
-    \label{tab:time_undef}
-\begin{tabular}{|l|l|l|l|ll|}
-\hline
-\multicolumn{1}{|c|}{\multirow{2}{*}{\textbf{Module}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{File}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Undef}}} & \multirow{2}{*}{\textbf{Compilable}} & \multicolumn{2}{c|}{\textbf{Linkable}} \\ \cline{5-6} 
-\multicolumn{1}{|c|}{}                                 & \multicolumn{1}{c|}{}                               & \multicolumn{1}{c|}{}                                &                                      & \multicolumn{1}{l|}{Manual}  & Propose \\ \hline
-collision (Box2d)                                      & 53                                                  & 5                                                    & 0:02:39                              & \multicolumn{1}{l|}{0:08:23} & 0:00:04 \\ \hline
-FPT1                                     & 45                                                  & 263                                                  & 1:04:22                              & \multicolumn{1}{l|}{0:14:48} & 0:00:28 \\ \hline
-FPT2                                          & 126                                                 & 333                                                  & 2:05:56                              & \multicolumn{1}{l|}{1:31:01} & 0:02:24 \\ \hline
-\end{tabular}
-\end{table}
-
-Kết quả thực nghiệm cho thấy thời gian xử lý các hàm thiếu định nghĩa thủ công chiếm một phần đáng kể trong tổng thời gian chuẩn bị môi trường, trong đó thời gian xử lý trên mô-đun collision là 75,98\%, 18,70\% với mô-đun FPT1 và 41,96\% với mô-đun còn lại. Khi áp dụng phương pháp đề xuất, thời gian xử lý các hàm thiếu định nghĩa giảm đáng kể so với phương pháp truyền thống, giảm 8 phút 19 giây trên mô-đun collision, 14 phút 20 giây trên mô-đun FPT1 và giảm 1 tiếng 29 phút trên mô-đun còn lại. Dựa vào kết quả, có thể nhận thấy rằng thời gian xử lý của hai phương pháp phụ thuộc vào số lượng hàm thiếu định nghĩa có trong mô-đun.
-
-% \subsection{Đánh giá}
-Kết quả thực nghiệm cho thấy rằng phương pháp đề xuất có khả năng giảm đáng kể thời gian chuẩn bị môi trường kiểm thử cho mã nguồn chứa hàm thiếu dịnh nghĩa. Một số lí do chính dẫn đến sự cải thiện đáng kể này như sau:
-\begin{itemize}
-    \item Trước hết, thời gian xử lý thủ công bị ảnh hưởng bởi kích thước và độ phức tạp của mã nguồn. Các mô-đun có thể phụ thuộc bởi rất nhiều mô-đun khác và đồng thời chúng cũng chứa rất nhiều tệp. Điều này gây khó khăn cho lập trình viên khi họ cần xác định vị trí các tệp chứa hàm thiếu định nghĩa. Phương pháp đề xuất chỉ quan tâm tới danh sách các hàm trả về bởi trình biên dịch và kết hợp duyệt trên đồ thị cấu trúc mã nguồn nên nhanh chóng xác định và xử lý đúng hàm thiếu định nghĩa.
-    \item Quá trình xử lý hàm thiếu định nghĩa thủ công đòi hỏi lập trình viên có kiến thức về mã nguồn kiểm thử. Điều này khiến lập trình viên tốn nhiều thời gian để nghiên cứu mã nguồn và xử lý chính xác các hàm thiếu định nghĩa. Trong bối cảnh ngôn ngữ C++ đang được phát triển với nhiều đặc trưng mới ra mắt, việc xử lý thủ công có thể tiêu tốn nhiều chi phí về nhân lực và thời gian hơn.
-    \item Cuối cùng, phương pháp đề xuất có thể xử lý song song các hàm trong khi lập trình viên cần xử lý tuần tự từng hàm. Điều này dẫn tới thời gian xử lý giảm đáng kể so với phương pháp truyền thống.
-\end{itemize}
-
-Để đánh giá tính đúng đắn của phương pháp đề xuất, khóa luận đã tiến hành thực nghiệm sinh dữ liệu kiểm thử tự động cho các đơn vị trong mã nguồn sau khi xử lý hàm thiếu định nghĩa (trình bày ở Mục~\ref{sec:evaluate-autogen}). Kết quả cho thấy các ca kiểm thử đều thực thi được và không gặp lỗi trong quá trình liên kết. Như vậy, phương pháp đề xuất đã xử lý đúng và đủ các hàm thiếu định nghĩa cần thiết. Điều này được khẳng định bởi nếu phương pháp xử lý thiếu hoặc sai hàm, mã nguồn kiểm thử không thể liên kết và thực thi các ca kiểm thử được. Tính đến thời điểm nghiên cứu của khóa luận, phương pháp đề xuất đã giải quyết được các mã nguồn thực nghiệm chứa các đặc trưng của ngôn ngữ C++ ở nhiều phiên bản, mới nhất là bản C++20. Tuy nhiên trong các phiên bản tương lai, tính đúng đắn của phương pháp đề xuất có thể bị ảnh hưởng.
-
-Như vậy, phương pháp đề xuất có thể áp dụng vào thực tiễn để giúp giảm thời gian kiểm thử đơn vị tự động. Tuy nhiên, có thể nhận thấy rằng thấy phương pháp đề xuất vẫn còn phụ thuộc vào bước bóc tách mã nguồn và xử lý sao cho biên dịch được. Việc phụ thuộc vào các bước thủ công khiến quá trình chuẩn bị môi trường kiểm thử tốn nhiều thời gian, đặc biệt là khi kiểm thử cho mã nguồn kích thước lớn. Một số lí do dẫn đến phương pháp chưa hoàn toàn tự động được như sau:
-\begin{itemize}
-    \item Quá trình bóc tách mã nguồn yêu cầu công cụ trích xuất được đúng các tệp có liên quan đến mô-đun người dùng mong muốn kiểm thử. Điều này gây khó khăn bởi để trích xuất được chính xác mô-đun, công cụ cần phân tích mã nguồn của cả dự án để biết được các quan hệ giữa mô-đun và các thành phần khác. Việc phân tích mã nguồn dự án tốn nhiều thời gian và có thể cần phân tích nhiều lần do quá trình phát triển song song với quá trình kiểm thử.
-    \item Quá trình tự động xử lý các kiểu dữ liệu và các hàm ở mô-đun khác sao cho biên dịch được mã nguồn có thể không chính xác. Khi kiểm thử, ta muốn hạn chế sự tác động đến mã nguồn gốc. Do vậy, các kiểu dữ liệu và hàm ở mô-đun khác thường được sao chép ở một tệp và mô-đun kiểm thử sẽ sử dụng tệp sao chép này. Khi tự động hóa quá trình này, công cụ cần phân tích mã nguồn để biết chính xác nên sao chép kiểu nào, hàm nào và vị trí ở đâu.
-\end{itemize}
-
-% \subsection{Kết quả thực nghiệm}
-% Bảng \ref{tab:autogen-result} trình bày kết quả thực nghiệm sinh dữ liệu kiểm thử tự động cho một số tệp trong các mã nguồn C-plus-plus, Box2d và FPT1 giữa phương pháp AKAUTAUTO và phương pháp đề xuất. Trong đó, bốn tệp đầu được lấy từ dự án C-plus-plus, ba tệp tiếp theo được lấy từ dự án Box2d và năm tệp còn lại từ mô-đun FPT1. Các cột trong bảng có ý nghĩa như sau:
-% \begin{itemize}
-%     \item "File": Tên tệp mã nguồn đuôi .cpp được kiểm thử.
-%     \item "Unit": Số lượng hàm trong tệp mã nguồn được kiểm thử.
-%     \item "C1": Độ phủ $C_1$ của tệp mã nguồn.
-%     \item "C3": Độ phủ $C_3$ của tệp mã nguồn.
-%     \item "Num": Số lượng ca kiểm thử cần thiết để đạt được độ phủ tương ứng.
-%     \item "Mem": Bộ nhớ sử dụng trung bình (KB) khi sinh dữ liệu kiểm thử tự động cho một hàm trong tệp.
-%     \item "Time": Thời gian sinh trung bình (giây) khi sinh dữ liệu kiểm thử tự động cho một hàm trong tệp.
-% \end{itemize}
-
+Sau khi người dùng thực hiện quét mã QR, hệ thống sẽ thực hiện xác nhận tạo order mới cho số bàn đang ngồi với trạng thái là \tcode{draf}.
+Khách hàng sẽ được chuyển hướng đến trang chọn món sau khi nhận lại \tcode{orderId}, ở đấy khách hàng sẽ chọn các món ăn từ thực đơn của quán.
+Sau khi người dùng hoàn thành quá trình chọn đồ ăn cũng như xác nhận danh sách các món ăn cho đơn hàng, nhân viên, phục vụ, đầu bếp, v.v. sẽ chuyển trạng thái từng món cụ thể dựa theo tình trạng hiện tại của món ăn như \textit{đang chuẩn bị}, \textit{dã xong}, \textit{đã phục vụ}, v.v.
+Toàn bộ luồng nghiệp vụ sẽ lặp lại cho đến khi người dùng chọn tính năng thanh toán và hoàn thành bữa ăn.
 % \begin{table}[h]
 %     \centering
-%     \caption{Kết quả thực nghiệm sinh dữ liệu kiểm thử tự động cho một số mã nguồn}
-%     \label{tab:autogen-result}
-% \resizebox{\textwidth}{!}{%
-% \begin{tabular}{|l|l|lllll|lllll|}
+%     \caption{Kết quả thời gian chuẩn bị môi trường trên ba mô-đun thực nghiệm}
+%     \label{tab:time_undef}
+% \begin{tabular}{|l|l|l|l|ll|}
 % \hline
-% \multicolumn{1}{|c|}{\multirow{2}{*}{\textbf{File}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Unit}}} & \multicolumn{5}{c|}{\textbf{AKAUTAUTO Current Method}}                                                                                              & \multicolumn{5}{c|}{\textbf{Proposed Method}}                                                                                                                   \\ \cline{3-12} 
-% \multicolumn{1}{|c|}{}                               & \multicolumn{1}{c|}{}                               & \multicolumn{1}{c|}{C1}    & \multicolumn{1}{c|}{C3}    & \multicolumn{1}{c|}{Num} & \multicolumn{1}{c|}{Mem}     & \multicolumn{1}{c|}{Time} & \multicolumn{1}{c|}{C1}             & \multicolumn{1}{c|}{C3}             & \multicolumn{1}{c|}{Num} & \multicolumn{1}{c|}{Mem}     & \multicolumn{1}{c|}{Time} \\ \hline
-% avltree.cpp                                          & 10                                                  & \multicolumn{1}{l|}{91}    & \multicolumn{1}{l|}{80.55} & \multicolumn{1}{l|}{38}  & \multicolumn{1}{l|}{1856.31} & 4.42                      & \multicolumn{1}{l|}{\textbf{99.29}} & \multicolumn{1}{l|}{\textbf{100}}   & \multicolumn{1}{l|}{25}  & \multicolumn{1}{l|}{1299.69} & 4.73                      \\ \hline
-% binary\_search\_tree.cpp                             & 9                                                   & \multicolumn{1}{l|}{100}   & \multicolumn{1}{l|}{100}   & \multicolumn{1}{l|}{24}  & \multicolumn{1}{l|}{1048.37} & 5.61                      & \multicolumn{1}{l|}{\textbf{100}}   & \multicolumn{1}{l|}{\textbf{100}}   & \multicolumn{1}{l|}{42}  & \multicolumn{1}{l|}{870.71}  & 10.90                     \\ \hline
-% binaryheap.cpp                                       & 11                                                  & \multicolumn{1}{l|}{77.22} & \multicolumn{1}{l|}{24.16} & \multicolumn{1}{l|}{47}  & \multicolumn{1}{l|}{357.88}  & 2.51                      & \multicolumn{1}{l|}{\textbf{94.34}} & \multicolumn{1}{l|}{\textbf{73.75}} & \multicolumn{1}{l|}{46}  & \multicolumn{1}{l|}{238.66}  & 8.32                      \\ \hline
-% double\_linked\_list.cpp                             & 6                                                   & \multicolumn{1}{l|}{54.44} & \multicolumn{1}{l|}{31.66} & \multicolumn{1}{l|}{15}  & \multicolumn{1}{l|}{3269.37} & 4.43                      & \multicolumn{1}{l|}{\textbf{54.44}} & \multicolumn{1}{l|}{\textbf{31.66}} & \multicolumn{1}{l|}{34}  & \multicolumn{1}{l|}{405.41}  & 14.94                     \\ \hline
-% b2\_dynamic\_tree.cpp                                & 12                                                  & \multicolumn{1}{l|}{59.06} & \multicolumn{1}{l|}{45.12} & \multicolumn{1}{l|}{56}  & \multicolumn{1}{l|}{1101.79} & 175.82                    & \multicolumn{1}{l|}{\textbf{72.13}} & \multicolumn{1}{l|}{\textbf{64.32}} & \multicolumn{1}{l|}{37}  & \multicolumn{1}{l|}{295.80}  & 102.15                    \\ \hline
-% b2\_board\_phase.cpp                                 & 7                                                   & \multicolumn{1}{l|}{49.87} & \multicolumn{1}{l|}{26.85} & \multicolumn{1}{l|}{45}  & \multicolumn{1}{l|}{1611.60} & 206.98                    & \multicolumn{1}{l|}{\textbf{83.81}} & \multicolumn{1}{l|}{\textbf{68.75}} & \multicolumn{1}{l|}{31}  & \multicolumn{1}{l|}{5105.65} & 83.35                     \\ \hline
-% b2\_collide\_edge.cpp                                & 3                                                   & \multicolumn{1}{l|}{51.85} & \multicolumn{1}{l|}{44}    & \multicolumn{1}{l|}{15}  & \multicolumn{1}{l|}{2611.99} & 91.44                     & \multicolumn{1}{l|}{\textbf{76.44}} & \multicolumn{1}{l|}{\textbf{67.13}} & \multicolumn{1}{l|}{32}  & \multicolumn{1}{l|}{6020.06} & 263.73                    \\ \hline
-% FPT1\_file1.cpp                                    & 185                                                 & \multicolumn{1}{l|}{89.26} & \multicolumn{1}{l|}{60.67} & \multicolumn{1}{l|}{668} & \multicolumn{1}{l|}{442.53}  & 268.36                    & \multicolumn{1}{l|}{\textbf{98.43}} & \multicolumn{1}{l|}{\textbf{96.05}} & \multicolumn{1}{l|}{703} & \multicolumn{1}{l|}{188.49}  & 46.28                     \\ \hline
-% FPT1\_file2.cpp                               & 17                                                  & \multicolumn{1}{l|}{46.40} & \multicolumn{1}{l|}{29.29} & \multicolumn{1}{l|}{40}  & \multicolumn{1}{l|}{1353.71} & 54.60                     & \multicolumn{1}{l|}{\textbf{95.41}} & \multicolumn{1}{l|}{\textbf{86.55}} & \multicolumn{1}{l|}{75}  & \multicolumn{1}{l|}{23.79}   & 63.33                     \\ \hline
-% FPT1\_file3.cpp                                   & 1                                                   & \multicolumn{1}{l|}{66.67} & \multicolumn{1}{l|}{16.67} & \multicolumn{1}{l|}{7}   & \multicolumn{1}{l|}{21.34}   & 72.75                     & \multicolumn{1}{l|}{\textbf{100}}   & \multicolumn{1}{l|}{\textbf{100}}   & \multicolumn{1}{l|}{7}   & \multicolumn{1}{l|}{15.20}   & 54.20                     \\ \hline
-% FPT1\_file4.cpp                                    & 4                                                   & \multicolumn{1}{l|}{63.07} & \multicolumn{1}{l|}{16.67} & \multicolumn{1}{l|}{13}  & \multicolumn{1}{l|}{108.48}  & 278.04                    & \multicolumn{1}{l|}{\textbf{63.07}} & \multicolumn{1}{l|}{\textbf{16.67}} & \multicolumn{1}{l|}{10}  & \multicolumn{1}{l|}{6.68}    & 21.35                     \\ \hline
-% FPT1\_file5.cpp                                 & 2                                                   & \multicolumn{1}{l|}{92.86} & \multicolumn{1}{l|}{50}    & \multicolumn{1}{l|}{4}   & \multicolumn{1}{l|}{23.34}   & 10.91                     & \multicolumn{1}{l|}{\textbf{92.86}} & \multicolumn{1}{l|}{\textbf{50}}    & \multicolumn{1}{l|}{4}   & \multicolumn{1}{l|}{4.37}    & 9.36                      \\ \hline
-% \end{tabular}%
-% }
-% \end{table}
+% \multicolumn{1}{|c|}{\multirow{2}{*}{\textbf{Module}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{File}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{Undef}}} & \multirow{2}{*}{\textbf{Compilable}} & \multicolumn{2}{c|}{\textbf{Linkable}} \\ \cline{5-6} 
+% \multicolumn{1}{|c|}{}                                 & \multicolumn{1}{c|}{}                               & \multicolumn{1}{c|}{}                                &                                      & \multicolumn{1}{l|}{Manual}  & Propose \\ \hline
+% collision (Box2d)                                      & 53                                                  & 5                                                    & 0:02:39                              & \multicolumn{1}{l|}{0:08:23} & 0:00:04 \\ \hline
+% FPT1                                     & 45                                                  & 263                                                  & 1:04:22                              & \multicolumn{1}{l|}{0:14:48} & 0:00:28 \\ \hline
+% FPT2                                          & 126                                                 & 333                                                  & 2:05:56                              & \multicolumn{1}{l|}{1:31:01} & 0:02:24 \\ \hline
+% \end{tabular}
+% \end{table}      
