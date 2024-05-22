@@ -66,7 +66,7 @@ Chi tiết về việc triển khai và các cấu hình của K8s trên hệ th
 \end{figure}
 \footnotetext{https://kubernetes.io/docs/concepts/services-networking/ingress/\#name-based-virtual-hosting}
 \newpage
-\subsection{RabbitMQ}
+\subsection{Hàng đợi tin nhắn RabbitMQ}
 Đối với một hệ thống phân tán nói chung mà kiến trúc vi dịch vụ nói riêng, việc giao tiếp giữa các dịch vụ với nhau đóng vai trò then chốt.
 Khác với các ứng dụng theo kiến trúc một khối (monolithic) truyền thống khi mà các thành phần giao tiếp với nhau thông qua các lời gọi hàm hoặc chia sẻ bộ nhớ, các ứng dụng theo kiến trúc vi dịch vụ giao tiếp với nhau qua hai hình thức chính~\footnote{https://learn.microsoft.com/en-us/dotnet/architecture/microservices/architect-microservice-container-applications/communication-in-microservice-architecture\#communication-types}:
 \begin{itemize}
@@ -83,7 +83,7 @@ Hàng đợi tin nhắn cũng giúp tránh thất thoát dữ liệu, một trư
 Các công nghệ hàng đợi tin nhắn (message broker) phổ biến trên thị trường hiện nay có thể kể đến bao gồm Kafka, RabbitMQ, Amazon Simple Queue Service, v.v.
 Ở đây, RabbitMQ được lựa chọn nhờ sự đơn giản trong quá trình triển khai và cài đặt đơn giản hơn các dịch vụ khác~\footnote{https://aws.amazon.com/compare/the-difference-between-rabbitmq-and-kafka/}.
 Chi tiết về cách hàng đợi tin nhắn được sử dụng trong hệ thống quản lý quán ăn được đề cập ở Mục~\nameref{sec:system-architecture}.
-\subsection{MongoDB}
+\subsection{Hệ quản trị cơ sở dữ liệu MongoDB}
 Trong hệ thống quản lý nhà hàng phức tạp, việc lưu trữ và truy vấn dữ liệu hiệu quả là rất quan trọng.
 Khác với các cơ sở dữ liệu truyền thống, MongoDB thuộc dạng cơ sở dữ liệu NoSQL, tức MongoDB có khả năng lưu trữ dữ liệu dạng tài liệu hay các dữ liệu phi cấu trúc một cách linh hoạt dưới dạng \tcode{BSON}~\footnote{https://www.mongodb.com/docs/manual/core/document/\#std-label-bson-document-format}. Điều này khiến cho cấu trúc bảng, dữ liệu có thể dễ dàng thích ứng với những thay đổi bất ngờ trong mô hình dữ liệu và yêu cầu nghiệp vụ.
 Trong MongoDB, khái niệm khóa chính (primary key) và khóa ngoại (foreign key) không tồn tại theo cách hiểu truyền thống như trong các hệ quản trị cơ sở dữ liệu quan hệ (RDBMS). Tuy nhiên, MongoDB có những cơ chế riêng để đảm bảo tính toàn vẹn dữ liệu và tạo mối quan hệ giữa các bản ghi.
@@ -104,7 +104,7 @@ Ngoài ra, MongoDB còn có một phiên bản dịch vụ đám mây gọi là 
 Các chức năng này đều được MongoDB Atlas cung cấp trên nền tảng website gồm các chức năng như ghi nhật ký, các cảnh báo tùy chỉnh theo nhu cầu người dùng, giám sát tài nguyên hoạt động theo thời gian thực, v.v.
 Từ đó khóa luận này quyết định sử dụng MongoDB cũng như là MongoDB Atlas làm cơ sở dữ liệu của hệ thống quản lý quán ăn.
 Về chi tiết về mặt thiết kế cơ sở dữ liệu của hệ thống quản lý nhà hàng, quán ăn được đề cập ở Mục~\nameref{sec:database-design}.
-\subsection{Kong}
+\subsection{Cổng API Kong}
 Các hệ thống lớn hàng ngày sẽ phải tiếp nhận các lời gọi với tần suất rất lớn từ người dùng, đặc biệt là trong các giờ cao điểm trong ngày.
 Không những thế, những hệ thống này còn có thể phải đối mặt với nguy cơ bị DDOS (Distributed Denial-of-Service), tức khi hệ thống bị ngợp bởi một lượng truy cập lớn có thể gây ra tê liệt hệ thống.
 Cổng API (API Gateway) từ đây mang lại tác dụng như một điểm truy cập duy nhất cho ứng dụng, từ đó cấu hình chi tiết bên trong của nền tảng được ẩn dưới lớp API Gateway này.

@@ -75,7 +75,7 @@ Hệ thống quản lý nhà hàng, quán ăn được cấu hình chia làm hai
 Từ đó ta sẽ cấu hình Cổng API của Kong giúp cân bằng tải đến cả hai cụm.
 Ở đây ta sẽ điều chỉnh thêm một Upstream mới với IP của máy chủ đích đến là cụm dự phòng của hệ thống với cùng một thông số \tcode{Weight}.
 Điều này có nghĩa là lưu lượng truy cập sẽ được phân phối điều cho cả hai máy chủ.
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/hChip/test/kong-upstream.png}
     \caption{Các máy chủ được cấu hình trỏ đến trong Kong Gateway}

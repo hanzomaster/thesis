@@ -1,6 +1,6 @@
 \chapter{Giới thiệu hệ thống}\label{chap1}
 Trước khi đi sâu về thiết kế kiến trúc của hệ thống quản lý quán ăn và các dịch vụ liên quan, chương này sẽ trình bày các chức năng chính của hệ thống theo thiết kế cũng như là đi qua luồng nghiệp vụ của một số tính năng cụ thể.
-\section*{Các chức năng chính}\label{sec:main-functions}
+\section{Các chức năng chính}\label{sec:main-functions}
 Mô hình quản lý quán ăn được phát triển trong khóa luận này sẽ tập trung vào các chức năng chính giúp nhà hàng, quán ăn quản lý thực đơn, khách và bàn, v.v.
 Từ các chức năng chính như quản lý thực đơn sẽ có các chức năng nhỏ hơn bổ trợ được gọi là các tính năng phụ.
 Ví dụ như đối với chức năng quản lý bàn, ngoài các chức năng chính như tạo bàn mới, xóa bàn, thay đổi trạng thái của bàn, v.v., các nhánh chức năng phụ còn bao gồm các chức năng như ghép bàn, phân bàn cho những người đặt bàn trước, v.v.
@@ -24,7 +24,7 @@ Luồng đặt bàn trực tuyến và đặt món qua QR sẽ được tập tr
 Chương này sẽ tập trung mô tả qua các tác nhân tham gia vào hệ thống và một luồng nghiệp vụ tổng quan giữa các bên tham gia.
 Mô tả kỹ thuật các lời gọi API cũng như là các tương tác giữa các vi dịch vụ với nhau sẽ được mô tả rõ hơn tại Mục~\autoref{sec:user-flow-examples}
 
-\subsection*{Luồng đặt bàn trực tuyến}\label{sec:reservation-flow}
+\subsection{Luồng đặt bàn trực tuyến}\label{sec:reservation-flow}
 Luồng người dùng đặt bàn có thể được tương tác bởi cả người dùng đã đăng ký đăng nhập cũng như là người dùng vãng lai của hệ thống.
 Khách hàng có thể sử dụng chức năng đặt bàn tại trang giới thiệu \textit{landing-page} hoặc là trang giới thiệu \textit{customer-page} của nhà hàng, quán ăn đã gia nhập vào nền tảng chung.
 
@@ -50,7 +50,7 @@ Khách hàng có thể sử dụng chức năng đặt bàn tại trang giới t
 Ở bước 8 Bảng~\ref{tab:reservation-flow}, nhân viên xác nhận với khách hàng, điều này có thể được thực hiện thông qua nhân viên gọi điện hoặc gửi email xác nhận thông tin đặt bàn.
 Các trường thông tin của khách hàng sẽ được lấy từ thông tin tài khoản nếu khách hàng có đăng nhập vào hệ thống hoặc tại biểu mẫu được nhập khi yêu cầu đặt bàn của khách hàng mới.
 
-\subsection*{Luồng đặt món thông qua quét mã QR}\label{sec:order-flow}
+\subsection{Luồng đặt món thông qua quét mã QR}\label{sec:order-flow}
 Tương tự với Bảng~\ref{tab:reservation-flow}, cả khách hàng vãng lai và khách hàng đã đăng ký đều có thể thực hiện luồng đặt món, luồng bắt đầu từ trang \tcode{customer-page} hoặc trang giới thiệu \tcode{landing-page}.
 
 \begin{table}[]
@@ -94,7 +94,7 @@ Tuy nhiên vẫn sẽ có trường thông tin trong cơ sở dữ liệu giúp 
 Ngoài ra sau khi đơn hàng được hoàn thành, thực khách của quán cũng có lựa chọn đánh giá dịch vụ của quán ăn, nhà hàng giúp hỗ trợ tăng cường quảng bá nhà hàng trên trang giới thiệu của nền tảng.
 Chi tiết về các trường trong cơ sở dữ liệu thuộc từng dịch vụ trong hệ thống quản lý nhà hàng được đề cập ở Mục~\ref{sec:database-design}.
 
-\section*{Yêu cầu phi chức năng}
+\section{Yêu cầu phi chức năng}
 Trong quá trình phát triển một hệ thống, ngoài các chức năng chính cần được đáp ứng theo yêu cầu của bài toán, việc xác định các yêu cầu phi chức năng (Non-functional requirements) cũng đóng một vai trò then chốt khi cần đảm bảo chất lượng của sản phẩm cuối.
 Các yêu cầu phi chức năng tập trung vào những khía cạnh đặc thù của hệ thống như hiệu suất, độ bảo mật, khả năng sử dụng và khả năng bảo trì của hệ thống.
 Việc đảm bảo đáp ứng các yêu cầu phi chức năng giúp hệ thống hoạt động một cách ổn định và hiệu mà, giúp mang lại trải nghiệm tốt hơn cho người dùng.
