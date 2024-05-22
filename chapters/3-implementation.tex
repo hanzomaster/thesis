@@ -68,10 +68,10 @@ Chi tiết về việc triển khai và các cấu hình của K8s trên hệ th
 \newpage
 \subsection{RabbitMQ}
 Đối với một hệ thống phân tán nói chung mà kiến trúc vi dịch vụ nói riêng, việc giao tiếp giữa các dịch vụ với nhau đóng vai trò then chốt.
-Khác với các ứng dụng theo kiến trúc một khối (monolithic) truyền thống khi mà các thành phần giao tiếp với nhau thông qua các lời gọi hàm hoặc chia sẻ bộ nhớ, các ứng dụng theo kiến trúc vi dịch vụ giao tiếp với nhau qua hai hình thức chính:
+Khác với các ứng dụng theo kiến trúc một khối (monolithic) truyền thống khi mà các thành phần giao tiếp với nhau thông qua các lời gọi hàm hoặc chia sẻ bộ nhớ, các ứng dụng theo kiến trúc vi dịch vụ giao tiếp với nhau qua hai hình thức chính~\footnote{https://learn.microsoft.com/en-us/dotnet/architecture/microservices/architect-microservice-container-applications/communication-in-microservice-architecture\#communication-types}:
 \begin{itemize}
-    \item Giao tiếp đồng bộ (Synchronous communication) là khi các dịch vụ gửi yêu cầu đến các dịch vụ đích và chờ phản hồi từ đó trước khi tiếp tục thực hiện tác vụ tiếp theo. Các giao thức phổ biến cho giao tiếp đồng bộ bao gồm RESTful API và gRPC.
-    \item Giao tiếp bất đồng bộ (Asynchronous communication) khác với giao tiếp đồng bộ ở điểm dịch vụ gửi yêu cầu không cần chờ phản hồi ngay lập tức từ các dịch vụ đích.
+    \item Giao tiếp đồng bộ (Synchronous communication) là khi các dịch vụ gửi yêu cầu đến các dịch vụ đích và chờ phản hồi từ đó trước khi tiếp tục thực hiện tác vụ tiếp theo. Các giao thức phổ biến cho giao tiếp đồng bộ bao gồm RESTful API và gRPC (Remote Procedure Call).
+    \item Giao tiếp bất đồng bộ (Asynchronous communication) khác với giao tiếp đồng bộ ở phương diện khi dịch vụ gửi yêu cầu không cần chờ phản hồi ngay lập tức từ các dịch vụ đích.
     Điều này cho phép dịch vụ tiếp tục thực hiện các tác vụ khác trong khi chờ phản hồi.
     Giao tiếp không đồng bộ thường được thực hiện thông qua việc sử dụng hàng chờ tin nhắn (message queue).
 \end{itemize}
@@ -81,13 +81,13 @@ Hệ thống quản lý quán ăn yêu cầu khả năng xử lý các yêu cầ
 Hàng đợi tin nhắn cũng giúp tránh thất thoát dữ liệu, một trường hợp có thể xảy ra là khi một dịch vụ không hoạt động, các tin nhắn vẫn được lưu trữ ở trong hàng đợi và sẽ được xử lý một khi dịch vụ đó trở lại hoạt động.
 
 Các công nghệ hàng đợi tin nhắn (message broker) phổ biến trên thị trường hiện nay có thể kể đến bao gồm Kafka, RabbitMQ, Amazon Simple Queue Service, v.v.
-Ở đây, RabbitMQ được lựa chọn nhờ sự đơn giản trong quá trình triển khai và cài đặt đơn giản hơn các dịch vụ khác.
+Ở đây, RabbitMQ được lựa chọn nhờ sự đơn giản trong quá trình triển khai và cài đặt đơn giản hơn các dịch vụ khác~\footnote{https://aws.amazon.com/compare/the-difference-between-rabbitmq-and-kafka/}.
 Chi tiết về cách hàng đợi tin nhắn được sử dụng trong hệ thống quản lý quán ăn được đề cập ở Mục~\nameref{sec:system-architecture}.
 \subsection{MongoDB}
 Trong hệ thống quản lý nhà hàng phức tạp, việc lưu trữ và truy vấn dữ liệu hiệu quả là rất quan trọng.
-Khác với các cơ sở dữ liệu truyền thống, MongoDB thuộc dạng cơ sở dữ liệu NoSQL, tức MongoDB có khả năng lưu trữ dữ liệu dạng tài liệu hay các dữ liệu phi cấu trúc một cách linh hoạt dưới dạng JSON. Điều này khiến cho cấu trúc bảng, dữ liệu có thể dễ dàng thích ứng với những thay đổi bất ngờ trong mô hình dữ liệu và yêu cầu nghiệp vụ.
+Khác với các cơ sở dữ liệu truyền thống, MongoDB thuộc dạng cơ sở dữ liệu NoSQL, tức MongoDB có khả năng lưu trữ dữ liệu dạng tài liệu hay các dữ liệu phi cấu trúc một cách linh hoạt dưới dạng \tcode{BSON}~\footnote{https://www.mongodb.com/docs/manual/core/document/\#std-label-bson-document-format}. Điều này khiến cho cấu trúc bảng, dữ liệu có thể dễ dàng thích ứng với những thay đổi bất ngờ trong mô hình dữ liệu và yêu cầu nghiệp vụ.
 Trong MongoDB, khái niệm khóa chính (primary key) và khóa ngoại (foreign key) không tồn tại theo cách hiểu truyền thống như trong các hệ quản trị cơ sở dữ liệu quan hệ (RDBMS). Tuy nhiên, MongoDB có những cơ chế riêng để đảm bảo tính toàn vẹn dữ liệu và tạo mối quan hệ giữa các bản ghi.
-Đối với khóa chính, MongoDB tự động tạo một trường \tcode{\_id} cho mỗi tài liệu ngoại trừ những trường hợp người dùng chỉ định rõ.
+Đối với khóa chính, MongoDB tự động tạo một trường \tcode{\_id} cho mỗi tài liệu ngoại trừ những trường hợp người dùng chỉ định rõ~\footnote{https://www.mongodb.com/docs/manual/core/document/\#the-\_id-field}.
 Trường này có giá trị là một \tcode{ObejctId} duy nhất trên toàn bộ cơ sở dữ liệu.
 Giá trị của \tcode{ObejctId} là một chuỗi \tcode{byte} dài 12 ký tự trong đó 4 \tcode{byte} mang giá trị là thời gian tạo \tcode{Id}, 5 \tcode{byte} là giá trị ngẫu nhiên được tạo ra dựa theo \tcode{Id} của tiến trình và của máy, cuối cùng là 3 \tcode{byte} được tạo với một bộ đếm tăng dần, bộ đếm này sẽ được khởi tạo với một giá trị ngẫu nhiên~\footnote{https://www.mongodb.com/docs/manual/reference/method/ObjectId/}.
 
@@ -183,7 +183,7 @@ Sau đó GitLab Runner chạy phần \tcode{script} để biên dịch hệ th�
 Cuối cùng pha triển khai (deploy) mã lên K8s của GCP, GitLab Runner được cấu hình chạy một tệp lệnh chương trình sử dụng kubectl, một công cụ giúp giao tiếp với các Master Node (Control Plane)~\footnote{https://kubernetes.io/docs/reference/kubectl/}.
 Các cấu hình cho môi trường K8s nằm trong tệp \tcode{deployment-gke.yml} bao gồm các thành phần cài đặt cấu hình cho Ingress, Service và Deployment của hệ thống.
 Đối với phần cấu hình cho Ingress và Service, K8s sẽ chỉ cần có số cổng mà ứng dụng mở ra ngoài và tên của kho mã nguồn, tuy nhiên ở phần cấu hình cho Deployment và autoscaling (tự động mở rộng), các trường thông tin sẽ ảnh hưởng nhiều đến hiệu năng của ứng dụng hơn như thông số của API kiểm tra tình trạng hoạt động, các thông số cấu hình phần cứng liên quan đến bộ nhớ và CPU cho mỗi Pod, và giới hạn số lượng pod tối đa khi hệ thống mở rộng cũng như là ngưỡng hệ thống quá tải cần mở rộng thêm.
-\begin{lstlisting}[style=yaml, caption={Đoạn mã cấu hình cài đặt tự động mở rộng Kubernetes cho GitLab Runner.}, label={cod:k8s-gitlab-ci/cd},  captionpos=b, escapechar=|]
+\begin{lstlisting}[style=yaml, float,floatplacement=H,caption={Đoạn mã cấu hình cài đặt tự động mở rộng Kubernetes cho GitLab Runner.}, label={cod:k8s-gitlab-ci/cd},  captionpos=b, escapechar=|]
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

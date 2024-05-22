@@ -93,6 +93,20 @@ Ví dụ đối với chức năng đặt món qua việc quét mã QR, nếu kh
 Tuy nhiên vẫn sẽ có trường thông tin trong cơ sở dữ liệu giúp nhận biết nhân viên phụ trách cho việc tạo đơn hàng giúp nhận biết, kiểm soát xem nhân viên có tạo đơn hàng hay không nhằm tránh các tình huống không mong muốn phát sinh.
 Ngoài ra sau khi đơn hàng được hoàn thành, thực khách của quán cũng có lựa chọn đánh giá dịch vụ của quán ăn, nhà hàng giúp hỗ trợ tăng cường quảng bá nhà hàng trên trang giới thiệu của nền tảng.
 Chi tiết về các trường trong cơ sở dữ liệu thuộc từng dịch vụ trong hệ thống quản lý nhà hàng được đề cập ở Mục~\ref{sec:database-design}.
+
+\section*{Yêu cầu phi chức năng}
+Trong quá trình phát triển một hệ thống, ngoài các chức năng chính cần được đáp ứng theo yêu cầu của bài toán, việc xác định các yêu cầu phi chức năng (Non-functional requirements) cũng đóng một vai trò then chốt khi cần đảm bảo chất lượng của sản phẩm cuối.
+Các yêu cầu phi chức năng tập trung vào những khía cạnh đặc thù của hệ thống như hiệu suất, độ bảo mật, khả năng sử dụng và khả năng bảo trì của hệ thống.
+Việc đảm bảo đáp ứng các yêu cầu phi chức năng giúp hệ thống hoạt động một cách ổn định và hiệu mà, giúp mang lại trải nghiệm tốt hơn cho người dùng.
+Đối với hệ thống quản lý nhà hàng, quán ăn, các yêu cầu phi chức năng bao gồm:
+\begin{itemize}
+    \item Hiệu năng: Hệ thống quản lý quán ăn cần đảm bảo thời gian phản hồi với các yêu cầu từ phía người dùng không quá 2 giây, đặc biệt là vào giờ cao điểm khi lượng yêu cầu từ người dùng tăng cao.
+    Ngoài ngưỡng thời gian phản hồi, hệ thống cũng cần xử lý cùng lúc một số lượng lớn người dùng kết nối đến cùng một lúc từ nhiều địa điểm, có thể lên đến hàng nghìn yêu cầu mỗi giây.
+    \item Tính sẵn sàng: Hệ thống cần đảm bảo tính sẵn sàng cao, đảo bảo hoạt động liên tục với lượng ngắt kết nối tối thiểu.
+    Thời gian phục hồi sau sự cố không được quá 15 phút
+    \item Bảo mật: Hệ thống cần tuân thủ các chuẩn bảo mật như OWASP (Open Web Application Security Project)~\footnote{https://www.cloudflare.com/learning/security/threats/owasp-top-10/}, WASC (Web Application Security Consortium), v.v. phổ biến trên thế giới cũng như là các điều luật tại Việt Nam như Nghị định 13 về bảo vệ dữ liệu cá nhân~\footnote{https://thuvienphapluat.vn/van-ban/Cong-nghe-thong-tin/Nghi-dinh-13-2023-ND-CP-bao-ve-du-lieu-ca-nhan-465185.aspx}
+\end{itemize}
+
 % \begin{lstlisting}[language=C++, caption={Các câu lệnh tìm nguyên mẫu hàm thiếu định nghĩa cần quan tâm sử dụng trình biên dịch.}, label={cod:command-undef},  captionpos=b]
 % g++ -c *.cpp
 % ld -r *.o -o temp.o
