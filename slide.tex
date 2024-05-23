@@ -1,0 +1,677 @@
+\documentclass[aspectratio=169, 12pt]{beamer}
+\usepackage[utf8]{vietnam}
+\usepackage[vietnamese=nohyphenation]{hyphsubst}
+\usepackage[vietnamese, english]{babel}
+
+\mode<presentation> {
+    \usetheme{Boadilla}
+    \usecolortheme{rose}
+}
+
+\usepackage{algorithmic}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\usepackage{graphicx} % Allows including images
+\graphicspath{{images/}}
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[justification=centering]{caption}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{natbib}
+% \captionsetup[table]{name=Bảng}
+% \captionsetup[figure]{name=Hình}
+\usepackage{setspace}
+\setstretch{1.3}
+\begin{document}
+% \input{notions}
+
+\begin{frame}
+\title[AOD]{\textbf{Phát triển hệ thống hỗ trợ quản lý nhà hàng vừa và nhỏ}}
+\author{Trần Tuấn Thịnh \\ {\small Cán bộ hướng dẫn: TS. Võ Đình Hiếu}}
+% \date{}
+\maketitle
+\end{frame}
+ 
+\begin{frame}{Nội dung}
+    \tableofcontents 
+\end{frame}
+	
+\section{Giới thiệu}
+\begin{frame}
+\vfill
+\begin{center}
+\Large{Giới thiệu}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Giới thiệu}
+\begin{spacing}{1.2}
+   \begin{itemize}
+          % \item Các mô hình nhận diện vật thể (Object detection) là một trong những kiến trúc mô hình học sâu hiệu quả và được áp dụng trong nhiều ứng dụng thực tế.
+          \item Các mô hình nhận diện vật thể dễ dàng bị tấn công bởi sự nhiễu loạn trong ảnh đầu vào
+   
+          \item Kiểm thử tính chắc chắn của các mô hình học sâu là một nhiệm vụ quan trọng trong thực tiễn
+    \end{itemize}
+        
+\begin{figure}[!hbpt]
+  \centering
+  \includegraphics[width=.6\linewidth]{img/od_example.png}
+  \caption{Ảnh gốc (trái) và ảnh đối kháng (phải)}
+  \label{fig:demo1}
+\end{figure}
+
+\end{spacing}
+\end{frame}
+	
+
+\begin{frame}{Phân loại phương pháp sinh ảnh đối kháng}
+
+\begin{itemize}
+
+    \item Sinh nhiễu đối kháng theo dạng hộp trắng
+    % \cite{carlini2017adversarial, wang2021daedalus}
+    
+\begin{itemize}
+
+    % \item Ưu điểm
+    % \begin{itemize}
+        \item Đạt hiệu năng cao hơn so với sinh nhiễu đối kháng theo dạng hộp đen
+    % \end{itemize}
+
+    % \item Nhược điểm
+    % \begin{itemize}
+        \item Cần có toàn quyền truy cập vào mô hình mục tiêu
+        $\Rightarrow$ Thường khó đạt được trong thực tế
+    % \end{itemize}
+    
+\end{itemize}
+
+    \item Sinh nhiễu đối kháng theo dạng \textbf{hộp đen}
+    % \cite{alzantot2019genattack, andriushchenko2020square}
+\begin{itemize}
+    \item Phương pháp chỉ cần một phần đầu ra từ mô hình mục tiêu
+    
+    $\Rightarrow$ Dễ áp dụng trong thực tế
+\end{itemize}
+
+\end{itemize}
+
+\end{frame}
+
+
+\begin{spacing}{1.1}
+
+\section{Kiến thức nền tảng}
+
+\begin{frame}
+\vfill
+\begin{center}
+\Large{Kiến thức nền tảng}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Sinh nhiễu đối kháng theo dạng hộp đen dựa vào truy vấn}
+
+    \begin{minipage}{0.71\textwidth}
+    
+    \begin{itemize}
+        \item Ý tưởng chính: truy vấn lặp đi lặp lại một mô hình mục tiêu và tạo ra các ảnh đối kháng dựa trên phản hồi của nó
+
+        \item Ưu điểm
+        \begin{itemize}
+            \item Không yêu cầu quyền truy cập vào gradient của mô hình
+            \item Dễ dàng thực hiện trong các tình huống thực tế
+        \end{itemize}
+    
+        \item Nhược điểm
+        \begin{itemize}
+            \item Có thể tốn nhiều thời gian
+            % \item Không cần truy cập vào mô hình mục tiêu
+        \end{itemize}
+    \end{itemize}
+    
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.27\textwidth}
+    
+    %\vspace{-0.5cm}
+    \centering
+    \begin{figure}[h]
+    \includegraphics[height=0.82\textheight, width=1\linewidth]{img/demo_query.png}
+    % \caption{Ảnh gốc (trên) và ảnh đối kháng (dưới)}
+    \end{figure}
+    
+    \end{minipage}
+\end{frame}
+
+
+
+\begin{frame}{Phương pháp \prfa (ICCV-2021)}
+
+\begin{minipage}{0.7\textwidth}
+\prfa là công trình đầu tiên về sinh nhiễu đối kháng theo dạng hộp đen dựa vào truy vấn
+
+\begin{itemize}
+
+    \item Cách tiếp cận: Sinh nhiễu trên các vùng có tính đối tượng cao (vùng có nhiều khả năng chứa đối tượng nhất)
+
+    \item Hạn chế
+    \begin{itemize}
+        \item Tỷ lệ thành công thấp
+        \item Chi phí tính toán cao
+    \end{itemize}
+
+    \item Nguyên nhân
+    \begin{itemize}
+        \item Phương pháp tìm kiếm ngẫu nhiên, không tận dụng thông tin từ lần lặp trước
+        \item Chi phí tính toán tỷ lệ thuận với số lượng bounding box
+    \end{itemize}
+
+\end{itemize}
+\end{minipage}
+\hfill
+\begin{minipage}{0.27\textwidth}
+\centering
+\begin{figure}[h]
+\includegraphics[height=0.85\textheight]{img/demo_prfa.png}
+\end{figure}
+\end{minipage}
+
+\end{frame}
+
+\end{spacing}
+
+
+
+\begin{frame}{Phương pháp \prfa (ICCV-2021)}
+
+\begin{spacing}{1}
+
+Hàm loss của phương pháp \prfa
+
+\begin{minipage}{0.01\textwidth}
+\end{minipage}
+%
+\hfill
+\begin{minipage}{0.9\textwidth}
+\begin{figure}[h]
+\includegraphics[width=0.9\textwidth]{img/prfa_loss.png}
+\end{figure}
+\end{minipage}
+
+
+
+
+
+
+
+% Phần thứ nhất giúp giảm IoU của tất cả các bounding box và ground-truth nhỏ hơn một ngưỡng nhất định, phần thứ hai giúp tối đa hóa độ tự tin (confidence score) của các bounding box.
+
+\end{spacing}
+\end{frame}
+
+
+\begin{frame}{Phương pháp \prfa (ICCV-2021)}
+
+    Cách hoạt động của NMS
+    
+\begin{figure}[!hbpt]
+
+\begin{subfigure}{.5\textwidth}
+  \includegraphics[width=0.9\linewidth]{img/nms_before.png}
+  \caption{NMS lọc bounding box \\
+  trước khi bị tấn công}
+  \label{fig:nms_before}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=0.9\linewidth]{img/nms_after.png}
+  \caption{NMS lọc bounding box \\
+  sau khi bị tấn công}
+  \label{fig:nms_after}
+\end{subfigure}
+
+\end{figure}
+    
+\end{frame}
+ 
+	
+% 	\section{Kiến thức nền tảng}
+% 	\begin{frame}{Kiến thức nền tảng}
+% 	\begin{itemize}
+% 	    \item Dữ liệu đối kháng trong tấn công có định hướng mô hình học sâu $\model$ - $\adversaryVector$: 
+% 	    \begin{itemize}
+% 	        \item được sinh ra bởi một phương pháp sinh dữ liệu đối kháng.
+% 	        \item $||\inputVector - \adversaryVector||_p <= b$
+% 	        \item $\classOfAdversaryVector = \targetLabel$ ($\targetLabel \neq \originLabel$)
+% 	    \end{itemize}
+
+% 	\item Dữ liệu đối kháng được sinh ra do việc không hoàn thiện của mô hình học sâu.
+% 	    \begin{itemize}
+% 	        \item Lỗi trong quá trình huấn luyện: bias, variance.
+% 	        \item Dữ liệu huấn luyện không hoàn thiện.
+% 	    \end{itemize}
+% 	\item Tiêu chí chất lượng của dữ liệu đối kháng: \LKhong, \tieuchi, \LVoCung. 
+% 	\end{itemize}
+% 	\end{frame}
+
+
+
+% \section{Tổng quan kiểm thử tính chắc chắn của mô hình nhận diện vật thể}
+
+% \begin{frame}{Các tiêu chí đánh giá chất lượng}
+
+% \begin{itemize}
+%     \item Chất lượng ảnh đối kháng:
+%         \begin{itemize}
+
+%             \item $\|L\|_0$
+            
+%             \item $\|L\|_2$
+%             \begin{equation}
+%                 \centering
+%                 \label{eqa:l2-infty}
+%             	\|L(\inputVector,\adversaryVector)\|_2 = 
+%             	    \sqrt{
+%                         \sum_{i \in [0 .. |\inputVector| - 1]}
+%                         (
+%                             \inputVectorWithIndex{i} - \adversaryVectorWithIndex{i}
+%                         )^2
+%                     } \in [0, \infty]
+%             \end{equation}
+%         \end{itemize}
+
+%     \item Chất lượng phương pháp sinh ảnh đối kháng:
+%     \begin{itemize}
+%         \item Tỉ lệ thành công (success rate)
+
+% % \begin{equation}
+% %      success\_rate = \frac{|\{\inputVectorWithIndex{i} \in \subsetX: argmax(\predictedProbOfInputVector_{P(\inputVectorWithIndex{i})}) = \targetLabel\}|}{|\subsetX|}
+% % \end{equation}
+
+%         \item Hiệu năng (performance)
+%     \end{itemize}
+    
+% \end{itemize}
+    
+% \end{frame}
+
+
+
+\section{Phương pháp đề xuất}
+
+\begin{frame}
+\vfill
+\begin{center}
+\Large{Phương pháp đề xuất}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Phương pháp đề xuất - \proposedMethod}
+    Các bước khác với \prfa được đánh dấu màu xám
+
+    \begin{figure}[!hbpt]
+      \centering
+      \includegraphics[width=1\linewidth]{img/pipeline.png}
+      % \caption{}
+      \label{fig:proposed_method}
+    \end{figure}
+
+\end{frame}
+
+
+\begin{frame}{Tìm các vùng có tính đối tượng cao}
+
+\begin{minipage}{0.51\textwidth}
+    \begin{itemize}
+    
+        \item Mục tiêu: Tìm các vùng có tính đối tượng cao, ký hiệu \textit{P}
+
+        \item Cách tiếp cận phổ biến
+        \begin{itemize}
+            \item Sử dụng ground-truth bounding box
+            \item Sử dụng dự đoán của mô hình nhận diện vật thể khác
+        \end{itemize}
+    
+    \end{itemize}
+\end{minipage}
+%
+\hfill
+\begin{minipage}{0.46\textwidth}
+\begin{figure}[h]
+\includegraphics[width=1\textwidth]{img/demo_step.png}
+% \caption{}
+\end{figure}
+\end{minipage}
+    
+\end{frame}
+
+
+\begin{frame}{Đề xuất: Sắp xếp các vùng có tính đối tượng cao}
+
+\begin{minipage}{0.51\textwidth}
+\begin{itemize}
+
+    \item Mục tiêu: Tìm khu vực ưu tiên nhất để thêm nhiễu
+    \item Khả năng chứa đựng đối tượng của một vùng được đại diện bởi một điểm số
+    
+    $\Rightarrow$ \textit{P} được sắp xếp theo thứ tự giảm dần dựa trên số điểm này
+    
+\end{itemize}
+\end{minipage}
+%
+\hfill
+\begin{minipage}{0.46\textwidth}
+\begin{figure}[h]
+\includegraphics[width=1\textwidth]{img/demo_step2.png}
+% \caption{}
+\end{figure}
+\end{minipage}
+
+\end{frame}
+
+
+\begin{frame}{Sinh nhiễu dạng vuông} 
+\begin{itemize}
+    \item Mục tiêu: Tạo ra ảnh đối kháng
+%     \begin{itemize}
+%         \item Tìm các vùng vuông, ký hiệu $S$
+%         \item Tại vòng lặp thứ \textit{i}
+%         \begin{itemize}
+%             \item Tạo ra các nhiễu vuông từ tập hợp \textit{S}
+%             \item Tạm thời thêm các nhiễu này vào hình ảnh hiện tại $x_{i-1}$
+%             \item Lật dấu của các nhiễu trong một nửa của hình vuông, theo chiều dọc hoặc ngang
+%             \item Tính toán hàm loss
+%             \item Nếu giá trị giảm, thêm các nhiễu vào $x_{i-1}$
+%         \end{itemize}
+%     \end{itemize}
+\vspace{0.2cm}
+    \begin{figure}[!hbpt]
+      \centering
+      \includegraphics[width=1\linewidth]{img/square_step.png}
+      % \caption{}
+      \label{fig:proposed_method}
+    \end{figure}
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}{Đề xuất: Hàm loss} 
+
+\begin{spacing}{0.8}
+
+Thay vì giảm trực tiếp IoU của hai bounding box, hàm loss đề xuất hướng đến việc giảm chiều rộng và chiều cao của các bounding box
+
+\begin{minipage}{0.55\textwidth}
+\setlength{\abovedisplayskip}{5pt}
+\setlength{\belowdisplayskip}{5pt}
+\begin{align}
+\label{l1}
+l_{1}  = l_{2} + l_{3} 
+\end{align}
+%
+\begin{align}
+\label{eqa:l2}
+l_{2} =  \frac{1}{\|\Lambda\|}\sum_{\lambda\in \Lambda} \displaystyle \mathop{E}_{i:argmax(p_i)=\lambda} { \Big\{ b^0_i \cdot max(p_i)^2}
+\end{align}
+%
+\begin{align}
+\label{eqa:l3}
+l_{3} = 
+{\Big(\frac{\pbb^w_i \cdot \pbb^h_i \cdot \Gamma}{w \times h}\Big)^2 \Big\}}
+\end{align}
+\end{minipage}
+%
+\hfill
+\begin{minipage}{0.39\textwidth}
+\begin{figure}[h]
+\includegraphics[width=1\textwidth]{img/siou.png}
+% \caption{}
+\end{figure}
+\end{minipage}
+
+trong đó
+
+\begin{table}[]
+\begin{tabular}{ll}
+\begin{equation}
+\Gamma=1-2 \cdot \sin ^2\left(\arcsin (\angle) - \frac{\pi}{4}\right)
+\end{equation} & \begin{equation}
+\angle =\frac{c_h}{\sigma}=\sin (\alpha)
+\end{equation} \\
+\begin{equation}
+\sigma=\sqrt{\left(b_{c_x}^{g t}-b_{c_x}\right)^2+\left(b_{c_y}^{g t}-b_{c_y}\right)^2}
+\end{equation} & \begin{equation}
+c_h=\max \left(b_{c_y}^{g t}, b_{c_y}\right)-\min \left(b_{c_y}^{g t}, b_{c_y}\right)
+\end{equation}
+\end{tabular}
+\end{table}
+
+\end{spacing}
+
+\end{frame}
+
+
+
+\section{Thực nghiệm}
+% \begin{frame}{Thực nghiệm}
+% Câu hỏi nghiên cứu: 
+% \begin{itemize}
+
+% \item RQ1. So sánh và đánh giá về chất lượng ảnh đổi kháng được sinh ra bởi phương pháp đề xuất \proposedMethod, phương pháp TOG và Daedalus dựa trên các tiêu chí đánh giá \tieuchi, \LKhong, SSIM, hiệu năng sinh ảnh, và tỉ lệ thành công.
+
+
+% \item RQ2. Làm rõ tính hiệu quả trong việc chọn tham số $\alpha$ và recover bounding box tại phần tối ưu hóa của phương pháp đề xuất \proposedMethod.
+% \end{itemize}
+
+    
+% \end{frame}
+
+\begin{frame}
+\vfill
+\begin{center}
+\Large{Kết quả thực nghiệm}
+\end{center}
+\vfill
+\end{frame}
+
+	
+\begin{frame}{Thiết lập thực nghiệm}
+    \begin{itemize}
+        \item Bộ dữ liệu: COCO
+        \item Mô hình mục tiêu: YOLOv5s
+        \item Tiêu chí đánh giá
+            \begin{itemize}
+                \item Tỷ lệ thành công
+                \item Chất lượng ảnh
+                \item Hiệu suất (thời gian trung bình của một truy vấn)
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Tỷ lệ thành công}    
+
+\begin{figure}[!hbpt]
+    \centering
+    \includegraphics[width=0.5\textwidth, height=5.2cm]{img/really_truev2.png}
+    % \caption{So sánh về tỷ lệ thành công}
+    \label{fig:sr}
+\end{figure}
+
+% \vspace{-0.8cm}
+\begin{itemize}
+    \item Hàm loss của \proposedMethod tối ưu hơn \prfa $\Rightarrow$  Tỷ lệ thành công của \propose cao hơn 14\%
+\end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}{Chất lượng ảnh}    
+
+\begin{figure}[!hbpt]
+\begin{subfigure}{.5\textwidth}
+  \includegraphics[width=1\linewidth]{img/last_SSIM.png}
+  \caption{So sánh về độ đo SSIM}
+  \label{fig:SSIM}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{img/last_PSNR.png}
+  \caption{So sánh về độ đo PSNR}
+  \label{fig:PSNR}
+\end{subfigure}
+\end{figure}
+
+% \begin{itemize}
+%     \item Hàm loss của \proposedMethod tối ưu hơn \prfa $\Rightarrow$  Tỷ lệ thành công của \propose tăng cao hơn \textbf{14\%}
+% \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Hiệu suất}    
+
+    
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Phương pháp} & \textbf{Thời gian một truy vấn} & \textbf{Số lượng bounding box} \\
+        \hline
+        \prfa & 3,21s & 25.000 \\ 
+        \hline
+        \proposedMethod & 0,25s & Vài trăm \\
+        \hline
+        \end{tabular}
+        % \caption{Kết quả thực nghiệm - Hiệu suất}
+    \end{table}
+
+
+    % \item Lý do:
+    %     \begin{itemize}
+    %     \item \prfa tính toán đạo hàm của 25.000 hộp giới hạn
+    %     \item \proposedMethod chỉ tính toán đạo hàm của vài trăm hộp giới hạn
+    %     \end{itemize}
+        
+\begin{itemize}
+
+    \item \proposedMethod tính đạo hàm trên ít bounding box hơn $\Rightarrow$ hiệu suất được cải thiện hơn \prfa gấp \textbf{13 lần}
+        
+\end{itemize}
+    
+\end{frame}
+
+
+
+\begin{frame}{Ảnh đối kháng sinh bởi \prfa và \propose}  
+
+\begin{figure}[!hbpt]    
+\small
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[height=3.5cm,width=1\linewidth]{img/ori2.png}
+  \caption{Ground-truth}
+\end{subfigure}% 
+\hfill
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[height=3.5cm,width=1\linewidth]{img/prfa.png}
+  \caption{PRFA (mAP = 0.6)}
+\end{subfigure}%
+\hfill
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[height=3.5cm,width=1\linewidth]{img/adv.png}
+  \caption{\propose (mAP = 0.2)}
+\end{subfigure}%
+% \caption{Ảnh đối kháng sinh bởi \prfa và \propose}
+\label{fig:demo1}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}{Ảnh đối kháng sinh bởi \prfa và \propose}  
+
+\begin{figure}[!hbpt]    
+\small
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[height=4.2cm,width=3cm]{img/origin_prfa_fail.png}
+  \caption{Ground-truth}
+\end{subfigure}% 
+\hfill
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[height=4.2cm,width=3cm]{img/prfa_fail.png}
+  \caption{PRFA (mAP = 1.0)}
+\end{subfigure}%
+\hfill
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[height=4.2cm,width=3cm]{img/0000003181380.png}
+  \caption{\propose (mAP = 0.33)}
+\end{subfigure}%
+% \caption{Ảnh đối kháng sinh bởi \prfa và \propose}
+\label{fig:demo1}
+\end{figure}
+
+\end{frame}
+ 
+	
+\section{Kết luận}
+
+\begin{frame}{Kết luận}
+
+\begin{itemize}
+\item Các đóng góp chính của \proposedMethod:
+\begin{itemize}
+    \item Hàm loss mới
+    \item Cơ chế ưu tiên vùng có tính đối tượng cao
+\end{itemize}
+
+\item \proposedMethod có tỷ lệ thành công cao hơn 14\% và hiệu suất nhanh gấp 13 lần PRFA
+
+\item Hướng đi trong tương lai:
+\begin{itemize}
+    \item Cải thiện chất lượng ảnh đối kháng sinh bởi \proposedMethod
+    \item Tiến hành thử nghiệm với các bộ dữ liệu và mô hình khác
+\end{itemize}
+
+\item Nghiên cứu đã đạt giải “Best paper” tại \textbf{Hội nghị KSE 2023}
+
+\end{itemize}
+\end{frame}
+
+
+%------------------------------------------------
+
+% \section{1 số nghiên cứu khác}
+% \begin{frame}{1 số nghiên cứu khác}
+% 1 số nghiên cứu khác:
+% \begin{itemize}
+% \item Tạo nhiễu đối kháng:
+%  \begin{itemize}
+%         \item Sinh nhiễu đối kháng theo dạng hộp đen(In review KSE 2023)   
+      
+%     \end{itemize}
+% \item Các mô hình khử nhiễu và khử các loại thời tiết:
+% \begin{itemize}
+%    \item Sử dụng các mô hình Autoencoder, GAN để khử nhiễu của ảnh.
+%    \item Sử dụng các mô hình Autoencoder, GAN để khử các điều kiện thời tiết.
+% \end{itemize}
+% \end{itemize}
+ 
+% \end{frame}	
+	
+	
+	
+\end{document}

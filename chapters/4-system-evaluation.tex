@@ -1,7 +1,7 @@
 \chapter{Đánh giá hệ thống}\label{chap4}
 Việc thực hiện đánh giá hệ thống sau khi đã triển khai trên môi trường thực nghiệm là một bước quan trọng giúp đảm bảo hệ thống hoạt động đúng như mong đợi, đáp ứng các yêu cầu về hiệu suất độ tin cậy và khả năng mở rộng.
 Chương này sẽ đánh giá hiệu quả hoạt động thông qua các bộ kiểm thử được cấu hình sẵn.
-Ngoài ra ở Chương này đề cập đến một số vấn đề gặp phải trong quá trình phát triển nên tảng quản lý quán ăn.
+Ngoài ra ở Chương này đề cập đến một số vấn đề gặp phải trong quá trình phát triển nền tảng quản lý quán ăn.
 \section{Hiệu quả hoạt động}\label{sec:efficiency}
 Để đánh giá hiệu quả hoạt động của hệ thống một cách toàn diện, hai bộ kiểm thử được tiến hành gồm kiểm thử tự động mở rộng và kiểm thử tính sẵn sàng cao.
 Kiểm thử tự động mở rộng tập trung vào khả năng GKE tự động điều chỉnh tài nguyên, số lượng Node, Pod để đáp ứng với sự biến động trong lưu lượng truy cập.
@@ -36,7 +36,7 @@ resources:
 	\label{fig:resource-before-test}
 \end{figure}
 Hình~\ref{fig:resource-before-test} cho thấy lượng tài nguyên Deployment trước khi bắt đầu gọi API có số lượng bộ nhớ tối đa có thể truy cập được là \tcode{1.95GiB} tương đương với 4 Pod đang hoạt động.
-Công cụ được sử dụng để chạy kiểm thử là Jmeter, một công cụ kiểm thử hiệu năng mã nguồn mở nổi tiếng thường xuyên được dùng trong các công việc liên quan đến đo lường và phân tích hiệu suất của cá ứng dụng web cũng như là các dịch vụ.
+Công cụ được sử dụng để chạy kiểm thử là Jmeter, một công cụ kiểm thử hiệu năng mã nguồn mở nổi tiếng thường xuyên được dùng trong các công việc liên quan đến đo lường và phân tích hiệu suất của các ứng dụng web cũng như là các dịch vụ.
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{images/hChip/test/Jmeter-setup.png}
